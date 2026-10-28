@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hi-Line Morning Desk</title>
+<meta name="description" content="Chester-area grain bids, ag lending rates, farm policy and Montana banking news.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232E6A4E'/%3E%3Cpath d='M16 26V9M16 13c-3-1-5-3-5-6 3 0 5 2 5 6zm0 0c3-1 5-3 5-6-3 0-5 2-5 6zm0 6c-3-1-5-3-5-6 3 0 5 2 5 6zm0 0c3-1 5-3 5-6-3 0-5 2-5 6z' stroke='%23F4EBD7' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working screen — futures strip on top, grain bids on the left, policy + banking news on the right; stacks on phones. */
+:root {
+  --bg: #F2F4F1;
+  --surface: #FFFFFF;
+  --ink: #17221C;
+  --muted: #5C6A62;
+  --line: #D8DED8;
+  --accent: #2E6A4E;
+  --gold: #9A6E1C;
+  --gold-soft: #F4EBD7;
+  --up: #2E7D4F;
+  --down: #A8442E;
+  --font-display: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #18201B; --ink: #E5EBE6; --muted: #93A399; --line: #2A3530;
+    --accent: #72B894; --gold: #D9AE5A; --gold-soft: #2C2618; --up: #74C795; --down: #E0876F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #18201B; --ink: #E5EBE6; --muted: #93A399; --line: #2A3530;
+  --accent: #72B894; --gold: #D9AE5A; --gold-soft: #2C2618; --up: #74C795; --down: #E0876F;
+  color-scheme: dark;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+/* Header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 24px; }
+.top h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.01em; line-height: 1.1; margin: 0; text-wrap: balance; }
+.top .date { color: var(--muted); font-size: 14px; }
+.stamp { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+.refresh { display: grid; justify-items: end; gap: 6px; text-align: right; max-width: 360px; }
+@media (max-width: 600px) { .refresh { justify-items: start; text-align: left; } }
+.btn { font: 600 14px var(--font-body); padding: 7px 16px; border-radius: 5px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .55; cursor: default; filter: none; }
+.ident { display: grid; gap: 6px; min-width: 0; }
+.zipbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 2px 0 0; }
+.zipbar label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.zipbar input { font: 500 14px var(--font-data); width: 7ch; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+.zipbar input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn-quiet { font: 500 13px var(--font-body); padding: 5px 12px; border-radius: 5px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.btn-quiet:hover { border-color: var(--accent); color: var(--accent); }
+.btn-quiet:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#zip-msg { overflow-wrap: anywhere; }
+
+/* Futures strip */
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.tick { padding: 12px 16px; border-right: 1px solid var(--line); min-width: 0; }
+.tick:last-child { border-right: 0; }
+.tick .lbl { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tick .px { font-family: var(--font-data); font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.tick .sym { font-family: var(--font-data); font-size: 11px; color: var(--muted); }
+.strip-note { grid-column: 1 / -1; border-top: 1px solid var(--line); padding: 6px 16px; font-size: 12px; color: var(--muted); }
+
+/* Main grid */
+.cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: 20px; min-width: 0; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+.panel-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 14px 18px 10px; border-bottom: 1px solid var(--line); }
+.panel-h h2 { font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: 0.02em; margin: 0; text-transform: uppercase; }
+.panel-b { padding: 14px 18px 18px; display: grid; gap: 14px; }
+
+/* Bids */
+.loc { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
+.loc h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.loc .sub { color: var(--muted); font-size: 13px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button {
+  font: 500 13px var(--font-body); padding: 5px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
+}
+.tabs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+td.cash { font-weight: 600; color: var(--ink); }
+tr.best td.cash { background: var(--gold-soft); color: var(--gold); }
+td .chg { font-size: 12px; margin-left: 6px; }
+.chg.up { color: var(--up); } .chg.down { color: var(--down); }
+.hint { font-size: 12px; color: var(--muted); }
+
+.elev { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.elev-card { border: 1px solid var(--line); border-radius: 5px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.elev-card h4 { margin: 0; font-size: 15px; font-weight: 600; }
+.elev-card p { margin: 0; font-size: 13px; color: var(--muted); }
+.phone { font-family: var(--font-data); font-size: 14px; user-select: all; color: var(--ink); }
+
+/* News */
+.news { list-style: none; margin: 0; padding: 0; display: grid; }
+.news li { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 3px; }
+.news li:first-child { padding-top: 0; }
+.news li:last-child { border-bottom: 0; padding-bottom: 0; }
+.news .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.news .tag { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--gold); }
+.news a.t { font-weight: 600; font-size: 15px; color: var(--ink); text-decoration: none; line-height: 1.35; }
+.news a.t:hover { color: var(--accent); text-decoration: underline; }
+.news p { margin: 0; font-size: 14px; color: var(--muted); max-width: 68ch; }
+
+.empty { color: var(--muted); font-size: 14px; padding: 6px 0; }
+.foot { font-size: 12px; color: var(--muted); text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .tabs button { transition: background .15s, color .15s; } }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+.warn { color: var(--down); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="ident">
+      <h1 id="title">Hi-Line Morning Desk</h1>
+      <div class="date" id="today">Chester, Montana</div>
+      <form class="zipbar" id="zip-form" novalidate>
+        <label for="zip-input">ZIP</label>
+        <input id="zip-input" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" pattern="[0-9]{5}" placeholder="59522" aria-describedby="zip-msg">
+        <button type="submit" class="btn-quiet">Show</button>
+        <button type="button" class="btn-quiet" id="share-btn">Copy link</button>
+        <span class="hint" id="zip-msg" role="status" aria-live="polite"></span>
+      </form>
+    </div>
+    <div class="refresh">
+      <div class="stamp" id="updated">Waiting for today's briefing…</div>
+      <button type="button" id="refresh-btn" class="btn">Refresh now</button>
+      <div class="hint" id="refresh-msg" role="status" aria-live="polite"></div>
+    </div>
+  </header>
+
+  <section class="strip" id="strip" aria-label="Wheat futures">
+    <div class="tick"><div class="lbl">Wheat futures</div><div class="empty">Prices load with the briefing.</div></div>
+  </section>
+
+  <div class="cols">
+    <div class="col">
+      <section class="panel" aria-labelledby="h-bids">
+        <div class="panel-h"><h2 id="h-bids">Area elevator bids</h2><span class="stamp" id="bids-asof"></span></div>
+        <div class="panel-b" id="bids">
+          <div class="empty">Cash bids for Chester-area elevators will show here once the morning briefing is posted.</div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-usda">
+        <div class="panel-h"><h2 id="h-usda">Regional ranges</h2><span class="stamp" id="usda-asof"></span></div>
+        <div class="panel-b" id="usda">
+          <div class="empty">USDA Montana elevator bid ranges by region will show here.</div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-spec">
+        <div class="panel-h"><h2 id="h-spec">Canola &amp; pulses</h2><span class="hint">$/cwt</span></div>
+        <div class="panel-b" id="spec">
+          <div class="empty">Canola crusher bids and USDA pea, lentil and chickpea prices will show here.</div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="panel" aria-labelledby="h-agd">
+        <div class="panel-h"><h2 id="h-agd">AgDirect equipment rates</h2><span class="stamp" id="agd-asof"></span></div>
+        <div class="panel-b" id="agd">
+          <div class="empty">AgDirect fixed and variable equipment loan rates by amount and term will show here.</div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-policy">
+        <div class="panel-h"><h2 id="h-policy">Farm policy</h2><span class="hint">Farm bill · legislation · USDA</span></div>
+        <div class="panel-b"><ul class="news" id="policy"><li class="empty">Farm bill and ag legislation headlines will show here.</li></ul></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-bank">
+        <div class="panel-h"><h2 id="h-bank">Banking</h2><span class="hint" id="bank-hint">Community &amp; ag lending</span></div>
+        <div class="panel-b"><ul class="news" id="banking"><li class="empty">Banking news that matters to a Hi-Line community bank will show here.</li></ul></div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">Refreshed each weekday morning. Bids are snapshots gathered automatically; call the elevator before you sell.</p>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const safeUrl = (u) => { try { const x = new URL(u); return (x.protocol === "https:" || x.protocol === "http:") ? x.href : null; } catch { return null; } };
+  const link = (href, text, cls) => { const a = el("a", cls, text); const u = safeUrl(href); if (u) { a.href = u; a.target = "_blank"; a.rel = "noopener"; } return a; };
+  const money = (v, d = 4) => (typeof v === "number" ? v.toFixed(d) : (v ?? "—"));
+  const fmtBasis = (v) => typeof v === "number" ? (v >= 0 ? "+" : "") + Math.round(v * 100) : (v ?? "—");
+
+  const HOME_ZIP = "59522";
+  const isZip = (z) => /^\d{5}$/.test(z || "");
+  const todayStr = () => new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  // ZIP comes from the link first (?zip=), then this browser's last choice, then Chester.
+  let zip = (() => {
+    const q = new URLSearchParams(location.search).get("zip");
+    if (isZip(q)) return q;
+    try { const s = localStorage.getItem("hl-zip"); if (isZip(s)) return s; } catch {}
+    return HOME_ZIP;
+  })();
+  $("zip-input").value = zip;
+  $("today").textContent = todayStr();
+
+  function showPlace(p, isHome) {
+    const name = isHome ? "Hi-Line Morning Desk" : (p && p.city ? p.city + " Morning Desk" : "Morning Desk");
+    $("title").textContent = name;
+    document.title = name;
+    $("today").textContent = todayStr() + (p ? " · " + p.city + ", " + p.st + " " + zip : "");
+    $("bank-hint").textContent = "Community & ag lending" + (p && p.state ? " · " + p.state : "");
+  }
+
+  let activeClass = {};
+  try { activeClass = JSON.parse(localStorage.getItem("hl-tabs") || "{}") || {}; } catch {}
+
+  function renderStrip(f) {
+    const s = $("strip"); s.replaceChildren();
+    if (!f || !Array.isArray(f.items) || !f.items.length) { s.append(el("div", "tick", "No futures in today's briefing.")); return; }
+    f.items.forEach((it) => {
+      const t = el("div", "tick");
+      t.append(el("div", "lbl", it.label), el("div", "px", money(it.price)), el("div", "sym", it.symbol || ""));
+      s.append(t);
+    });
+    if (f.asOf || f.source) s.append(el("div", "strip-note", [f.source, f.asOf].filter(Boolean).join(" · ")));
+  }
+
+  function bidTable(cls) {
+    const wrap = el("div", "tbl-wrap");
+    const t = el("table"); const thead = el("thead"); const hr = el("tr");
+    [["Delivery", ""], ["Futures", "n"], ["Basis ¢", "n"], ["Cash $/bu", "n"]].forEach(([h, c]) => hr.append(el("th", c, h)));
+    thead.append(hr); t.append(thead);
+    const tb = el("tbody");
+    const rows = Array.isArray(cls.rows) ? cls.rows : [];
+    const best = rows.reduce((m, r) => (typeof r.cash === "number" && r.cash > m ? r.cash : m), -Infinity);
+    rows.forEach((r) => {
+      const tr = el("tr", r.cash === best ? "best" : "");
+      const d = el("td"); d.append(document.createTextNode(r.month || "")); if (r.symbol) { const s = el("span", "hint", " " + r.symbol); d.append(s); }
+      const cash = el("td", "n cash", money(r.cash));
+      if (typeof r.chg === "number" && r.chg !== 0) cash.append(el("span", "chg " + (r.chg > 0 ? "up" : "down"), (r.chg > 0 ? "+" : "") + (r.chg * 100).toFixed(1) + "¢"));
+      tr.append(d, el("td", "n", money(r.futures)), el("td", "n", fmtBasis(r.basis)), cash);
+      tb.append(tr);
+    });
+    t.append(tb); wrap.append(t); return wrap;
+  }
+
+  function renderBids(data) {
+    const b = $("bids"); b.replaceChildren();
+    const posted = Array.isArray(data.posted) ? data.posted : [];
+    posted.forEach((loc, i) => {
+      const box = el("div"); box.style.display = "grid"; box.style.gap = "10px";
+      const head = el("div", "loc");
+      const left = el("div"); left.append(el("h3", null, loc.name), el("div", "sub", [loc.location, loc.asOf ? "as of " + loc.asOf : ""].filter(Boolean).join(" · ")));
+      head.append(left);
+      if (loc.url) head.append(link(loc.url, "Live bids ↗", "hint"));
+      box.append(head);
+      const classes = Array.isArray(loc.classes) ? loc.classes : [];
+      if (classes.length) {
+        const key = "loc" + i;
+        const tabs = el("div", "tabs"); tabs.setAttribute("role", "group"); tabs.setAttribute("aria-label", loc.name + " grain class");
+        const holder = el("div");
+        let cur = Math.min(activeClass[key] || 0, classes.length - 1);
+        const show = () => {
+          [...tabs.children].forEach((btn, j) => btn.setAttribute("aria-pressed", String(j === cur)));
+          holder.replaceChildren(bidTable(classes[cur]));
+        };
+        classes.forEach((c, j) => {
+          const btn = el("button", null, c.name); btn.type = "button"; btn.id = "tab-" + key + "-" + j;
+          btn.addEventListener("click", () => { cur = j; activeClass[key] = j; try { localStorage.setItem("hl-tabs", JSON.stringify(activeClass)); } catch {} show(); });
+          tabs.append(btn);
+        });
+        box.append(tabs, holder); show();
+        box.append(el("div", "hint", "Highlighted row is the best cash price on the board."));
+      }
+      b.append(box);
+    });
+    const others = Array.isArray(data.callFor) ? data.callFor : [];
+    if (others.length) {
+      const grid = el("div", "elev");
+      others.forEach((o) => {
+        const c = el("div", "elev-card");
+        c.append(el("h4", null, o.name));
+        if (o.location) c.append(el("p", null, o.location));
+        if (o.note) c.append(el("p", null, o.note));
+        if (o.phone) c.append(el("div", "phone", o.phone));
+        if (o.url) c.append(link(o.url, o.urlLabel || "Open bids page ↗", "hint"));
+        grid.append(c);
+      });
+      b.append(grid);
+    }
+    if (!posted.length && !others.length) b.append(el("div", "empty", "No elevator bids in today's briefing."));
+  }
+
+  function renderUsda(u) {
+    const box = $("usda"); box.replaceChildren();
+    $("usda-asof").textContent = u && u.asOf ? u.asOf : "";
+    if (!u || !Array.isArray(u.rows) || !u.rows.length) { box.append(el("div", "empty", "No USDA ranges in today's briefing.")); return; }
+    const wrap = el("div", "tbl-wrap"); const t = el("table");
+    const hr = el("tr"); [["Class", ""], ["Region", ""], ["Basis ¢", "n"], ["Range $/bu", "n"], ["Avg", "n"]].forEach(([h, c]) => hr.append(el("th", c, h)));
+    const th = el("thead"); th.append(hr); t.append(th);
+    const tb = el("tbody");
+    u.rows.forEach((r) => { const tr = el("tr"); tr.append(el("td", null, r.cls), el("td", null, r.region), el("td", "n", r.basis || "—"), el("td", "n", r.range || "—"), el("td", "n cash", r.avg || "—")); tb.append(tr); });
+    t.append(tb); wrap.append(t); box.append(wrap);
+    const foot = el("div", "hint"); foot.append(document.createTextNode((u.note ? u.note + " " : "")));
+    if (u.url) foot.append(link(u.url, "Full USDA report ↗"));
+    box.append(foot);
+  }
+
+  function renderAgd(a) {
+    const box = $("agd"); box.replaceChildren();
+    $("agd-asof").textContent = a && a.asOf ? a.asOf : "";
+    if (!a || !Array.isArray(a.tiers) || !a.tiers.length) { box.append(el("div", "empty", "No AgDirect rates in today's briefing.")); return; }
+    const terms = Array.isArray(a.terms) ? a.terms : [];
+    const wrap = el("div", "tbl-wrap"); const t = el("table");
+    const hr = el("tr"); hr.append(el("th", null, "Amount financed"));
+    terms.forEach((x) => hr.append(el("th", "n", x + " yr")));
+    hr.append(el("th", "n", "Variable"));
+    const th = el("thead"); th.append(hr); t.append(th);
+    const tb = el("tbody");
+    a.tiers.forEach((r) => {
+      const tr = el("tr"); tr.append(el("td", null, r.amount));
+      (Array.isArray(r.fixed) ? r.fixed : []).forEach((v) => tr.append(el("td", "n", typeof v === "number" ? v.toFixed(2) + "%" : (v || "—"))));
+      tr.append(el("td", "n", typeof r.variable === "number" ? r.variable.toFixed(2) + "%" : (r.variable || "—")));
+      tb.append(tr);
+    });
+    t.append(tb); wrap.append(t); box.append(wrap);
+    const foot = el("div", "hint"); foot.append(document.createTextNode("Fixed rates by term in years. " + (a.note ? a.note + " " : "")));
+    if (a.url) foot.append(link(a.url, "AgDirect rates ↗"));
+    box.append(foot);
+  }
+
+  function simpleTable(headers, rows) {
+    const wrap = el("div", "tbl-wrap"); const t = el("table");
+    const hr = el("tr"); headers.forEach(([h, c]) => hr.append(el("th", c, h)));
+    const th = el("thead"); th.append(hr); t.append(th);
+    const tb = el("tbody");
+    rows.forEach((cells) => { const tr = el("tr"); cells.forEach(([v, c]) => tr.append(el("td", c, v))); tb.append(tr); });
+    t.append(tb); wrap.append(t); return wrap;
+  }
+  const p2 = (v) => typeof v === "number" ? v.toFixed(2) : (v || "—");
+
+  function renderSpec(s) {
+    const box = $("spec"); box.replaceChildren();
+    const c = s && s.canola; const p = s && s.pulses;
+    if (c && Array.isArray(c.rows) && c.rows.length) {
+      const head = el("div", "loc");
+      const left = el("div"); left.append(el("h3", null, "Canola — crusher bids"), el("div", "sub", c.asOf || ""));
+      head.append(left); if (c.url) head.append(link(c.url, "USDA report ↗", "hint"));
+      const cols = Array.isArray(c.cols) ? c.cols : [];
+      const headers = [["Plant", ""]].concat(cols.map((x) => [x, "n"])).concat([["Chg", "n"]]);
+      const rows = c.rows.map((r) => [[r.loc, ""]].concat((r.vals || []).map((v, i) => [p2(v), i === 0 ? "n cash" : "n"])).concat([[typeof r.chg === "number" ? (r.chg > 0 ? "+" : "") + r.chg.toFixed(2) : "—", "n"]]));
+      box.append(head, simpleTable(headers, rows));
+      if (c.note) box.append(el("div", "hint", c.note));
+    }
+    if (p && Array.isArray(p.rows) && p.rows.length) {
+      const head = el("div", "loc");
+      const left = el("div"); left.append(el("h3", null, "Pulses — grower bids"), el("div", "sub", p.asOf || ""));
+      head.append(left); if (p.url) head.append(link(p.url, "USDA report ↗", "hint"));
+      const rows = p.rows.map((r) => [[r.crop, ""], [r.region, ""], [r.range || "—", "n"], [p2(r.avg), "n cash"], [p2(r.yearAgo), "n"]]);
+      box.append(head, simpleTable([["Crop", ""], ["Region", ""], ["Range", "n"], ["Avg", "n"], ["Yr ago", "n"]], rows));
+      if (p.note) box.append(el("div", "hint", p.note));
+    }
+    if (!box.children.length) box.append(el("div", "empty", "No canola or pulse prices in today's briefing."));
+  }
+
+  function renderNews(id, items) {
+    const ul = $(id); ul.replaceChildren();
+    if (!Array.isArray(items) || !items.length) { ul.append(el("li", "empty", "Nothing new in today's briefing.")); return; }
+    items.forEach((n) => {
+      const li = el("li");
+      const meta = el("div", "meta");
+      if (n.tag) meta.append(el("span", "tag", n.tag));
+      meta.append(el("span", null, [n.source, n.date].filter(Boolean).join(" · ")));
+      li.append(meta, link(n.url, n.title, "t"));
+      if (n.summary) li.append(el("p", null, n.summary));
+      ul.append(li);
+    });
+  }
+
+  function render(d) {
+    if (!d) return;
+    if (d.updatedAt) {
+      const t = new Date(d.updatedAt);
+      $("updated").textContent = "Briefing updated " + (isNaN(t) ? d.updatedAt : t.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }));
+    } else {
+      $("updated").textContent = "No local briefing for this ZIP yet.";
+    }
+    $("h-usda").textContent = (d.usda && d.usda.title) || "Regional ranges";
+    renderStrip(d.futures);
+    $("bids-asof").textContent = d.bids && d.bids.asOf ? d.bids.asOf : "";
+    renderBids(d.bids || {});
+    renderUsda(d.usda);
+    renderAgd(d.agdirect);
+    renderSpec(d.specialty);
+    renderNews("policy", d.policy);
+    renderNews("banking", d.banking);
+    if (d.empty) {
+      const town = d.place && d.place.city ? d.place.city : "this ZIP";
+      $("bids").replaceChildren(el("div", "empty", "Nearby elevator bids for " + town + " show here after the first refresh."));
+      $("usda").replaceChildren(el("div", "empty", "USDA regional price ranges for your state show here after the first refresh."));
+      $("strip").replaceChildren(el("div", "tick", "Futures come from the local bid boards."));
+    }
+  }
+
+  const btn = $("refresh-btn"), msg = $("refresh-msg");
+  let pollTimer = null, wasRunning = false;
+
+  function applyStatus(s) {
+    const running = !!(s && s.state === "running");
+    btn.disabled = running;
+    btn.textContent = running ? "Refreshing…" : "Refresh now";
+    if (running) {
+      msg.classList.remove("warn");
+      const t = s.startedAt ? new Date(s.startedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "";
+      msg.textContent = "Pulling current bids, rates and news" + (t ? " (started " + t + ")" : "") + ". The page updates on its own.";
+      if (!pollTimer) pollTimer = setInterval(load, 15000);
+    } else {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (wasRunning) {
+        if (s && s.lastError) { msg.classList.add("warn"); msg.textContent = "Updated, with gaps: " + s.lastError; }
+        else { msg.classList.remove("warn"); msg.textContent = "Updated with the latest data."; }
+      }
+    }
+    wasRunning = running;
+  }
+
+  const autoStarted = {};
+  let loadSeq = 0;
+
+  async function load() {
+    const mine = ++loadSeq, forZip = zip;
+    try {
+      const r = await fetch("/api/data?zip=" + forZip, { cache: "no-store" });
+      const j = await r.json().catch(() => ({}));
+      if (mine !== loadSeq) return; // a newer ZIP was picked meanwhile
+      if (!r.ok) {
+        if (r.status === 400 || r.status === 404) { $("zip-msg").textContent = j.error || "That ZIP code wasn't found."; return; }
+        throw new Error("HTTP " + r.status);
+      }
+      $("zip-msg").textContent = "";
+      showPlace(j.place, j.isHome);
+      if (j.briefing) render(j.briefing);
+      applyStatus(j.status);
+      // First time anyone opens this ZIP: pull its local bids and news automatically, once.
+      const needsFirst = !j.briefing || j.briefing.empty;
+      if (needsFirst && !(j.status && j.status.state === "running") && !autoStarted[forZip]) {
+        autoStarted[forZip] = true;
+        startRefresh(true);
+      }
+    } catch (e) {
+      if (mine === loadSeq) $("updated").textContent = "Couldn't load the briefing. Check your connection and reload.";
+    }
+  }
+
+  function setZip(z) {
+    zip = z;
+    $("zip-input").value = z;
+    try { localStorage.setItem("hl-zip", z); } catch {}
+    const u = new URL(location.href);
+    if (z === HOME_ZIP) u.searchParams.delete("zip"); else u.searchParams.set("zip", z);
+    try { history.replaceState(null, "", u); } catch {}
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    wasRunning = false; msg.textContent = ""; msg.classList.remove("warn");
+    load();
+  }
+
+  $("zip-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const z = $("zip-input").value.trim();
+    if (!isZip(z)) { $("zip-msg").textContent = "Enter a 5-digit ZIP code."; return; }
+    if (z !== zip) setZip(z); else load();
+  });
+
+  $("share-btn").addEventListener("click", async () => {
+    const u = new URL(location.origin + location.pathname);
+    if (zip !== HOME_ZIP) u.searchParams.set("zip", zip);
+    const text = u.toString();
+    try { await navigator.clipboard.writeText(text); $("zip-msg").textContent = "Link copied. It opens to ZIP " + zip + "."; }
+    catch { $("zip-msg").textContent = text; }
+  });
+
+  async function startRefresh(first) {
+    btn.disabled = true; btn.textContent = "Starting…"; msg.classList.remove("warn"); msg.textContent = first ? "First look at this ZIP: finding nearby elevators and local news…" : "";
+    try {
+      const r = await fetch("/api/refresh", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ zip, first: !!first }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 202 || r.status === 409) { await load(); if (!pollTimer) pollTimer = setInterval(load, 15000); }
+      else { btn.disabled = false; btn.textContent = "Refresh now"; msg.textContent = j.message || "Couldn't start the refresh. Try again in a minute."; }
+    } catch (e) {
+      btn.disabled = false; btn.textContent = "Refresh now"; msg.textContent = "Couldn't reach the server. Check your connection and try again.";
+    }
+  }
+  btn.addEventListener("click", () => startRefresh(false));
+
+  load();
+  // Pick up the morning refresh if the page was left open.
+  setInterval(() => { if (document.visibilityState === "visible" && !pollTimer) load(); }, 10 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
