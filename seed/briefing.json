@@ -1,0 +1,469 @@
+{
+  "agdirect": {
+    "asOf": "Effective Oct 1–31, 2026",
+    "note": "Variable is Prime ± spread; not available on leases. Subject to credit approval; 0–45 day fixed-rate lock with no fee.",
+    "terms": [
+      "2–3",
+      "4",
+      "5",
+      "6–7"
+    ],
+    "tiers": [
+      {
+        "amount": "$250,000+",
+        "fixed": [
+          7.25,
+          7.25,
+          7.25,
+          7.5
+        ],
+        "variable": 6.25
+      },
+      {
+        "amount": "$100,000–249,999",
+        "fixed": [
+          7.5,
+          7.5,
+          7.5,
+          7.75
+        ],
+        "variable": 6.25
+      },
+      {
+        "amount": "$25,000–99,999",
+        "fixed": [
+          7.75,
+          7.75,
+          7.75,
+          8
+        ],
+        "variable": 6.25
+      },
+      {
+        "amount": "$5,000–24,999",
+        "fixed": [
+          8.5,
+          8.5,
+          8.5,
+          8.75
+        ],
+        "variable": 6.25
+      }
+    ],
+    "url": "https://www.agdirect.com/rates"
+  },
+  "banking": [
+    {
+      "date": "May 18",
+      "source": "Minneapolis Fed Ag Credit Survey",
+      "summary": "Montana lenders reported lower farm income and repayment rates and more renewals and extensions, and expected more of the same. Small Montana sample, so read it as direction, not precision.",
+      "tag": "Ag credit",
+      "title": "Minneapolis Fed: higher input costs pressure district farmers",
+      "url": "https://www.minneapolisfed.org/article/2026/higher-input-costs-pressure-district-farmers"
+    },
+    {
+      "date": "Aug 14",
+      "source": "Kansas City Fed",
+      "summary": "Credit kept tightening in Q2, but income declines slowed and repayment problems stayed mostly minor. Cropland values held; ranchland hit new highs. Renters and smaller farms are weakest.",
+      "tag": "Ag credit",
+      "title": "KC Fed: steady tightening of ag credit conditions",
+      "url": "https://www.kansascityfed.org/agriculture/ag-credit-survey/steady-tightening-of-agricultural-credit-conditions-persists/"
+    },
+    {
+      "date": "Oct 14",
+      "source": "WRE News",
+      "summary": "Community bankers want the FDIC, OCC and Fed to coordinate CRA rulemaking and give clearer guidance on what counts as community development. Advocacy so far, not adopted rules.",
+      "tag": "Regulation",
+      "title": "ICBA asks regulators to align CRA rules and lift the small-bank threshold to $10B",
+      "url": "https://wrenews.com/icba-urges-harmonized-cra-regulations-october-2026/"
+    },
+    {
+      "date": "Oct 2",
+      "source": "PYMNTS",
+      "summary": "The suit argues crypto firms are entering banking without the scrutiny community banks face and asks a court to set aside the OCC's March rule.",
+      "tag": "Regulation",
+      "title": "ICBA sues the OCC over fast-tracked crypto trust charters",
+      "url": "https://www.pymnts.com/legal/bank-regulation/2026/icba-sues-occ-to-stop-alleged-fast-track-of-crypto-bank-charters/"
+    },
+    {
+      "date": "Sep 18",
+      "source": "PYMNTS",
+      "summary": "A House hearing looked at de novo capital rules and the Main Street Capital Access Act as regulators report renewed interest in new charters.",
+      "tag": "Industry",
+      "title": "New community banks face a $20 million starting line",
+      "url": "https://www.pymnts.com/news/banking/2026/new-community-banks-face-20-million-dollar-starting-line"
+    }
+  ],
+  "bids": {
+    "asOf": "Oct 22, 2026",
+    "callFor": [
+      {
+        "location": "891 US Hwy 2, Chester",
+        "name": "Columbia Grain — Chester",
+        "note": "Bids load inside their site and through the Bushel app, so they can't be pulled here yet.",
+        "url": "https://columbiagrain.com/location/chester-mt/",
+        "urlLabel": "Chester bids page ↗"
+      },
+      {
+        "location": "114 E Washington Ave, Chester",
+        "name": "Stricks Ag — Chester",
+        "note": "No bids posted online. Call the elevator office.",
+        "phone": "406-759-6489",
+        "url": "https://stricksag.com/contact-us/",
+        "urlLabel": "Contact page ↗"
+      }
+    ],
+    "posted": [
+      {
+        "asOf": "Oct 22, 9:51 AM MT",
+        "classes": [
+          {
+            "name": "DNS 14%",
+            "rows": [
+              {
+                "basis": -0.5,
+                "cash": 5.9625,
+                "futures": 6.4625,
+                "month": "Oct",
+                "symbol": "MWZ26"
+              },
+              {
+                "basis": -0.5,
+                "cash": 5.9625,
+                "futures": 6.4625,
+                "month": "Nov",
+                "symbol": "MWZ26"
+              },
+              {
+                "basis": -0.6,
+                "cash": 5.8625,
+                "futures": 6.4625,
+                "month": "Dec",
+                "symbol": "MWZ26"
+              },
+              {
+                "basis": -0.7,
+                "cash": 5.9475,
+                "futures": 6.6475,
+                "month": "Jan",
+                "symbol": "MWH27"
+              },
+              {
+                "basis": -0.65,
+                "cash": 5.9975,
+                "futures": 6.6475,
+                "month": "Feb",
+                "symbol": "MWH27"
+              },
+              {
+                "basis": -0.6,
+                "cash": 6.0475,
+                "futures": 6.6475,
+                "month": "Mar",
+                "symbol": "MWH27"
+              }
+            ]
+          },
+          {
+            "name": "HRW 11.5%",
+            "rows": [
+              {
+                "basis": -0.95,
+                "cash": 5.7475,
+                "futures": 6.6975,
+                "month": "Oct",
+                "symbol": "KWZ26"
+              },
+              {
+                "basis": -0.9,
+                "cash": 5.7975,
+                "futures": 6.6975,
+                "month": "Nov",
+                "symbol": "KWZ26"
+              },
+              {
+                "basis": -0.85,
+                "cash": 5.8475,
+                "futures": 6.6975,
+                "month": "Dec",
+                "symbol": "KWZ26"
+              },
+              {
+                "basis": -1,
+                "cash": 5.8,
+                "futures": 6.8,
+                "month": "Jan",
+                "symbol": "KWH27"
+              },
+              {
+                "basis": -0.95,
+                "cash": 5.85,
+                "futures": 6.8,
+                "month": "Feb",
+                "symbol": "KWH27"
+              },
+              {
+                "basis": -0.9,
+                "cash": 5.9,
+                "futures": 6.8,
+                "month": "Mar",
+                "symbol": "KWH27"
+              }
+            ]
+          }
+        ],
+        "location": "3301 Laird Rd, Chester",
+        "name": "EGT / Bunge — Chester",
+        "url": "https://www.bungeag.com/locations/chester-mt/#cashbids"
+      }
+    ]
+  },
+  "futures": {
+    "asOf": "Oct 22, 9:51 AM MT",
+    "items": [
+      {
+        "label": "MGEX Spring Wheat Dec",
+        "price": 6.4625,
+        "symbol": "MWZ26"
+      },
+      {
+        "label": "MGEX Spring Wheat Mar",
+        "price": 6.6475,
+        "symbol": "MWH27"
+      },
+      {
+        "label": "KC HRW Wheat Dec",
+        "price": 6.6975,
+        "symbol": "KWZ26"
+      },
+      {
+        "label": "KC HRW Wheat Mar",
+        "price": 6.8,
+        "symbol": "KWH27"
+      }
+    ],
+    "source": "Via EGT/Bunge Chester board, 10+ min delayed"
+  },
+  "policy": [
+    {
+      "date": "Oct 2",
+      "source": "farmdoc Farm Policy News",
+      "summary": "The 2018 extension lapsed Sept. 30. Crop insurance continues, but commodity title programs run out Dec. 31 and would revert to 1930s–40s permanent law without a new bill or another extension. Leaders are aiming for passage in the lame-duck session after the election.",
+      "tag": "Farm bill",
+      "title": "Farm bill expires again as lawmakers keep negotiating",
+      "url": "https://farmpolicynews.illinois.edu/2026/10/farm-bill-expires-again-as-lawmakers-continue-negotiations/"
+    },
+    {
+      "date": "Sep 18",
+      "source": "High Plains Journal",
+      "summary": "The House passed its version earlier this year. With the Senate committee bill out, the two chambers still have to reconcile before Congress turns over in January.",
+      "tag": "Farm bill",
+      "title": "Senate Ag Committee advances its farm bill",
+      "url": "https://hpj.com/2026/09/18/senate-ag-committee-advances-2026-farm-bill/"
+    },
+    {
+      "date": "Oct 8",
+      "source": "Farm Progress",
+      "summary": "Signed Oct. 5, it allows tax-exempt off-road diesel in semis and other on-road trucks hauling farm products. Several states added their own fuel-tax and weight relief; check Montana Dept. of Agriculture guidance.",
+      "tag": "Fuel",
+      "title": "Executive order lets farmers run dyed diesel in grain trucks through Dec. 31",
+      "url": "https://www.farmprogress.com/farm-policy/harvest-relief-diesel-tax-holiday"
+    },
+    {
+      "date": "Oct 1",
+      "source": "Minnesota Assn. of Wheat Growers",
+      "summary": "National wheat groups warn that low prices and high input costs make the delay hard on family farms and are pushing for a finished bill after the midterms.",
+      "tag": "Wheat",
+      "title": "Wheat growers press Congress to act on the farm bill",
+      "url": "https://mnwheat.org/with-farm-bill-set-to-expire-at-midnight-wheat-growers-call-on-congress-to-act/"
+    },
+    {
+      "date": "Oct 18",
+      "source": "Ag Bull Trading / Wiesemeyer",
+      "summary": "Weekly Washington outlook for ag. Full text is behind a paywall.",
+      "tag": "Washington",
+      "title": "Sanctions, diesel and lame-duck stakes lead the week ahead",
+      "url": "https://www.agbull.com/sanctions-retreat-diesel-pain-and-lame-duck-stakes-lead-washingtons-week-ahead/"
+    }
+  ],
+  "specialty": {
+    "canola": {
+      "asOf": "USDA report of Oct 21, 2026",
+      "cols": [
+        "Current",
+        "Nov",
+        "Dec",
+        "Jan",
+        "Mar"
+      ],
+      "note": "Delivered by truck. Chg is the day's move on the current bid. Divide by 2 for $/bu (50 lb bu). No Montana plants are in the report; Velva is the closest.",
+      "rows": [
+        {
+          "chg": -0.25,
+          "loc": "Velva, ND",
+          "vals": [
+            23.91,
+            24.1,
+            24.3,
+            24.5,
+            24.96
+          ]
+        },
+        {
+          "chg": -0.24,
+          "loc": "Enderlin, ND",
+          "vals": [
+            25.08,
+            25.08,
+            25.17,
+            25.47,
+            25.71
+          ]
+        },
+        {
+          "chg": -0.25,
+          "loc": "West Fargo, ND",
+          "vals": [
+            25.1,
+            25.25,
+            25.45,
+            25.45,
+            25.8
+          ]
+        },
+        {
+          "chg": -0.25,
+          "loc": "Hallock, MN",
+          "vals": [
+            23.18,
+            23.82,
+            23.99,
+            24.74,
+            25.1
+          ]
+        }
+      ],
+      "url": "https://www.ams.usda.gov/mnreports/ams_2887.pdf"
+    },
+    "pulses": {
+      "asOf": "USDA weekly review of Oct 19, 2026",
+      "note": "Conventional, delivered to warehouse. Min-Dak covers North Dakota and Montana buyers. Multiply peas by 0.6 for $/bu. For Hi-Line bids, call Columbia Grain Chester.",
+      "rows": [
+        {
+          "avg": 9.24,
+          "crop": "Yellow peas",
+          "range": "7.92–11.67",
+          "region": "Min-Dak",
+          "yearAgo": 8.83
+        },
+        {
+          "avg": 11.17,
+          "crop": "Green peas",
+          "range": "10.66–11.67",
+          "region": "Min-Dak",
+          "yearAgo": 14.86
+        },
+        {
+          "avg": 12,
+          "crop": "Green peas",
+          "range": "12.00",
+          "region": "PNW",
+          "yearAgo": 13
+        },
+        {
+          "avg": 16.13,
+          "crop": "Richlea lentils",
+          "range": "15.00–17.25",
+          "region": "Min-Dak",
+          "yearAgo": 18.75
+        },
+        {
+          "avg": 21.5,
+          "crop": "Brewer lentils",
+          "range": "21.00–22.00",
+          "region": "PNW",
+          "yearAgo": 22
+        },
+        {
+          "avg": 22,
+          "crop": "Pardina lentils",
+          "range": "22.00",
+          "region": "PNW",
+          "yearAgo": 22
+        },
+        {
+          "avg": 15.25,
+          "crop": "Chickpeas",
+          "range": "15.25",
+          "region": "Min-Dak",
+          "yearAgo": 21.25
+        },
+        {
+          "avg": 21.67,
+          "crop": "Chickpeas",
+          "range": "21.00–22.00",
+          "region": "PNW",
+          "yearAgo": 17
+        }
+      ],
+      "url": "https://www.ams.usda.gov/mnreports/AMS_2914.pdf"
+    }
+  },
+  "updatedAt": "2026-10-22T10:05:00-06:00",
+  "usda": {
+    "asOf": "Report of Oct 20, 2026",
+    "note": "Delivered-to-truck ranges. The report has no Hi-Line region; North Central and Golden Triangle are closest.",
+    "rows": [
+      {
+        "avg": "6.00",
+        "basis": "-65 to -58",
+        "cls": "DNS 14%",
+        "range": "5.97–6.04",
+        "region": "North Central"
+      },
+      {
+        "avg": "6.02",
+        "basis": "-65 to -55",
+        "cls": "DNS 14%",
+        "range": "5.97–6.07",
+        "region": "Golden Triangle"
+      },
+      {
+        "avg": "6.10",
+        "basis": "-55 to -50",
+        "cls": "DNS 14%",
+        "range": "6.07–6.12",
+        "region": "Great Falls"
+      },
+      {
+        "avg": "5.92",
+        "basis": "-101 to -98",
+        "cls": "HRW 12%",
+        "range": "5.90–5.93",
+        "region": "North Central"
+      },
+      {
+        "avg": "5.98",
+        "basis": "-95 to -92",
+        "cls": "HRW 12%",
+        "range": "5.96–5.99",
+        "region": "Golden Triangle"
+      },
+      {
+        "avg": "5.75",
+        "basis": "",
+        "cls": "Durum 13%",
+        "range": "5.75",
+        "region": "Golden Triangle"
+      },
+      {
+        "avg": "3.58",
+        "basis": "",
+        "cls": "Feed barley",
+        "range": "3.58",
+        "region": "Golden Triangle"
+      }
+    ],
+    "url": "https://www.ams.usda.gov/mnreports/ams_2771.pdf"
+  }
+}
