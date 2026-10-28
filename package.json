@@ -1,0 +1,15 @@
+{
+  "name": "hiline-desk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Hi-Line Morning Desk: Chester-area grain bids, ag lending rates, farm policy and banking news on one page.",
+  "scripts": {
+    "dev": "netlify dev",
+    "check": "node --check netlify/lib/sources.mjs && node --check netlify/lib/claude.mjs && node --check netlify/lib/store.mjs && node --check netlify/lib/place.mjs && node --check netlify/lib/start.mjs && node --check netlify/lib/refresh.mjs && node --check netlify/functions/data.mjs && node --check netlify/functions/refresh.mjs && node --check netlify/functions/refresh-background.mjs && node --check netlify/functions/scheduled-refresh.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.2.0",
+    "unpdf": "^1.0.0"
+  }
+}
