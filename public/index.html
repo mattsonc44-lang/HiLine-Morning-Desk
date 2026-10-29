@@ -116,6 +116,7 @@ td .chg { font-size: 12px; margin-left: 6px; }
 .elev-card { border: 1px solid var(--line); border-radius: 5px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
 .elev-card h4 { margin: 0; font-size: 15px; font-weight: 600; }
 .elev-card p { margin: 0; font-size: 13px; color: var(--muted); }
+.elev-card p.crops { color: var(--ink); font-weight: 500; }
 .phone { font-family: var(--font-data); font-size: 14px; user-select: all; color: var(--ink); }
 
 /* News */
@@ -179,7 +180,7 @@ img { max-width: 100%; }
       </section>
 
       <section class="panel" aria-labelledby="h-spec">
-        <div class="panel-h"><h2 id="h-spec">Canola &amp; pulses</h2><span class="hint">$/cwt</span></div>
+        <div class="panel-h"><h2 id="h-spec">Barley &amp; specialty crops</h2><span class="hint">Barley · canola · pulses · flax · mustard</span></div>
         <div class="panel-b" id="spec">
           <div class="empty">Canola crusher bids and USDA pea, lentil and chickpea prices will show here.</div>
         </div>
@@ -231,7 +232,9 @@ img { max-width: 100%; }
   $("zip-input").value = zip;
   $("today").textContent = todayStr();
 
+  let curPlace = null;
   function showPlace(p, isHome) {
+    curPlace = p || null;
     const name = isHome ? "Hi-Line Morning Desk" : (p && p.city ? p.city + " Morning Desk" : "Morning Desk");
     $("title").textContent = name;
     document.title = name;
@@ -367,9 +370,54 @@ img { max-width: 100%; }
   }
   const p2 = (v) => typeof v === "number" ? v.toFixed(2) : (v || "—");
 
+  const sectionHead = (title, sub, url, label) => {
+    const head = el("div", "loc");
+    const left = el("div"); left.append(el("h3", null, title)); if (sub) left.append(el("div", "sub", sub));
+    head.append(left); if (url) head.append(link(url, label || "Source ↗", "hint"));
+    return head;
+  };
+  const cash = (v, unit) => typeof v === "number" ? "$" + (unit === "lb" ? v.toFixed(3) : v.toFixed(2)) : "—";
+
   function renderSpec(s) {
     const box = $("spec"); box.replaceChildren();
-    const c = s && s.canola; const p = s && s.pulses;
+    const c = s && s.canola; const p = s && s.pulses; const b = s && s.barley; const ca = s && s.canada;
+
+    // Local buyers (Chester only): no readable bids, so cards with a link or phone number.
+    if (s && Array.isArray(s.buyers) && s.buyers.length) {
+      box.append(sectionHead("Local buyers", "Barley, canola and pulse buyers near Chester"));
+      const grid = el("div", "elev");
+      s.buyers.forEach((o) => {
+        const card = el("div", "elev-card");
+        card.append(el("h4", null, o.name));
+        if (o.crops) card.append(el("p", "crops", o.crops));
+        if (o.note) card.append(el("p", null, o.note));
+        if (o.phone) card.append(el("div", "phone", o.phone));
+        if (o.url) card.append(link(o.url, o.urlLabel || "Website ↗", "hint"));
+        grid.append(card);
+      });
+      box.append(grid);
+    }
+
+    // Barley: NASS monthly price received, visitor's state next to the U.S.
+    if (b && b.malting) {
+      const st = (curPlace && curPlace.st) || "MT";
+      const states = [st, "US"].filter((k, i, a) => a.indexOf(k) === i);
+      const pick = (tbl, k) => (tbl && Array.isArray(tbl[k]) ? tbl[k] : null);
+      const headers = [["Barley", ""]];
+      states.forEach((k) => { headers.push([k + " " + (b.prevMonth || "prior"), "n"], [k + " " + (b.month || "latest"), "n"]); });
+      const rows = [["Malting", b.malting], ["Feed", b.feed], ["All barley", b.all]]
+        .filter(([, t]) => t && states.some((k) => pick(t, k)))
+        .map(([name, t]) => {
+          const cells = [[name, ""]];
+          states.forEach((k) => { const v = pick(t, k) || [null, null]; cells.push([p2(v[0]), "n"], [p2(v[1]), "n cash"]); });
+          return cells;
+        });
+      if (rows.length) {
+        box.append(sectionHead("Barley — price received, $/bu", b.asOf, b.url, "USDA NASS ↗"), simpleTable(headers, rows));
+        box.append(el("div", "hint", (b.note || "") + (states[0] !== "US" && !pick(b.malting, states[0]) ? " Your state isn't in the malting barley table." : "") + " A dash means the figure isn't published."));
+      }
+    }
+
     if (c && Array.isArray(c.rows) && c.rows.length) {
       const head = el("div", "loc");
       const left = el("div"); left.append(el("h3", null, "Canola — crusher bids"), el("div", "sub", c.asOf || ""));
@@ -388,7 +436,35 @@ img { max-width: 100%; }
       box.append(head, simpleTable([["Crop", ""], ["Region", ""], ["Range", "n"], ["Avg", "n"], ["Yr ago", "n"]], rows));
       if (p.note) box.append(el("div", "hint", p.note));
     }
-    if (!box.children.length) box.append(el("div", "empty", "No canola or pulse prices in today's briefing."));
+
+    // Canadian reference prices (CAD, delivered), converted to US dollars at the day's exchange rate.
+    if (ca && Array.isArray(ca.rows) && ca.rows.length) {
+      const fx = s.fx && typeof s.fx.usdcad === "number" ? s.fx : null; // CAD per 1 USD
+      const toUsd = (v) => (fx && typeof v === "number" ? v / fx.usdcad : null);
+      const fxLine = fx ? "Converted at $1 US = $" + fx.usdcad.toFixed(4) + " CAD (" + (fx.source || "exchange rate") + ", " + (fx.date || "latest") + ")." : "No exchange rate yet, so US-dollar figures are blank.";
+
+      // Mustard: the Canadian bid in cents/lb and $/cwt, both currencies.
+      const mustard = ca.rows.filter((r) => /mustard/i.test(r.crop) && r.unit === "lb");
+      if (mustard.length) {
+        box.append(sectionHead("Mustard — Canadian bid in US dollars", ca.asOf ? "Delivered Western Canada · collected " + ca.asOf : "Delivered Western Canada", ca.url, "My Grain Exchange ↗"));
+        const cents = (v) => (typeof v === "number" ? (v * 100).toFixed(1) + "¢" : "—");
+        const cwt = (v) => (typeof v === "number" ? "$" + (v * 100).toFixed(2) : "—");
+        const rows = mustard.map((r) => { const u = toUsd(r.price); return [[r.crop.replace(/\s*mustard/i, ""), ""], [cents(r.price), "n"], [cents(u), "n cash"], [cwt(u), "n cash"], [r.updated || "—", "n"]]; });
+        box.append(simpleTable([["Mustard", ""], ["CAD /lb", "n"], ["USD /lb", "n"], ["USD /cwt", "n"], ["Updated", "n"]], rows));
+        box.append(el("div", "hint", fxLine + " $/cwt is the per-pound price × 100."));
+      }
+
+      const others = ca.rows.filter((r) => !mustard.includes(r));
+      if (others.length) {
+        box.append(sectionHead("Western Canada — other crops", ca.asOf ? "Delivered prices · collected " + ca.asOf : "Delivered prices", ca.url, "My Grain Exchange ↗"));
+        const usd = (r) => { const u = toUsd(r.price); return u == null ? "—" : r.unit === "lb" ? "$" + (u * 100).toFixed(2) + "/cwt" : "$" + u.toFixed(2) + "/bu"; };
+        const rows = others.map((r) => [[r.crop, ""], [cash(r.price, r.unit) + "/" + (r.unit || ""), "n"], [usd(r), "n cash"], [r.range || "—", "n"], [r.updated || "—", "n"]]);
+        box.append(simpleTable([["Crop", ""], ["CAD", "n"], ["USD", "n"], ["CAD 7-day range", "n"], ["Updated", "n"]], rows));
+        box.append(el("div", "hint", (ca.note ? ca.note + " " : "") + fxLine + " Per-pound crops are shown in US dollars per cwt."));
+      }
+    }
+
+    if (!box.children.length) box.append(el("div", "empty", "No barley or specialty crop prices in today's briefing."));
   }
 
   function renderNews(id, items) {
@@ -459,10 +535,16 @@ img { max-width: 100%; }
     const mine = ++loadSeq, forZip = zip;
     try {
       const r = await fetch("/api/data?zip=" + forZip, { cache: "no-store" });
-      const j = await r.json().catch(() => ({}));
+      const isJson = (r.headers.get("content-type") || "").includes("application/json");
+      const j = isJson ? await r.json().catch(() => ({})) : {};
       if (mine !== loadSeq) return; // a newer ZIP was picked meanwhile
+      if (!isJson) {
+        // Netlify's own error page: the data functions aren't deployed.
+        $("updated").textContent = "The site's data service isn't running. Redeploy the site from GitHub so its functions are included.";
+        return;
+      }
       if (!r.ok) {
-        if (r.status === 400 || r.status === 404) { $("zip-msg").textContent = j.error || "That ZIP code wasn't found."; return; }
+        if (j.error && (r.status === 400 || r.status === 404)) { $("zip-msg").textContent = j.error; return; }
         throw new Error("HTTP " + r.status);
       }
       $("zip-msg").textContent = "";
@@ -523,6 +605,7 @@ img { max-width: 100%; }
   load();
   // Pick up the morning refresh if the page was left open.
   setInterval(() => { if (document.visibilityState === "visible" && !pollTimer) load(); }, 10 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !pollTimer) load(); });
 })();
 </script>
 </body>
