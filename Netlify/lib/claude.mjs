@@ -90,10 +90,12 @@ export async function extractFixed({ apiKey, sources, srcMeta }) {
 
   const system = "You extract market data for an ag lender's morning page. Accuracy matters more than completeness: copy numbers exactly as they appear in the source; never estimate, round differently, or invent. If a section's data is missing or unreadable, return null for that section. Times on Bunge pages are Central; convert to Mountain (subtract 1 hour) and label \"MT\".";
 
-  const retryable = keys.filter((k) => srcMeta[k].kind === "html");
+  // Claude may re-fetch an HTML page (bids sometimes load by script) or any source our server
+  // couldn't get (USDA refuses some cloud servers). web_fetch runs from Anthropic, so it often gets through.
+  const retryable = keys.filter((k) => srcMeta[k].kind === "html" || !sources[k].ok);
   const user = `Today is ${nowMT()} (Mountain time).
 
-Below are page texts my server fetched. If an HTML source (${retryable.join(", ") || "none"}) failed or its text has no bid/rate numbers (pages sometimes load data with scripts), you may use web_fetch on that source's URL once to try again. Do not fetch anything else.
+Below are page texts my server fetched. For these sources: ${retryable.join(", ") || "none"}. If one shows FETCH FAILED, or its text has no bid/rate numbers (pages sometimes load data with scripts), use web_fetch on that source's URL once to get it (PDFs work too). Do not fetch anything else.
 
 Extract:
 ${keys.map((k) => "- " + EXTRACT[k].ask).join("\n")}
@@ -106,7 +108,7 @@ Reply with only the JSON inside <json></json> tags, matching this shape:
 ${blocks}`;
 
   const domains = [...new Set(retryable.map((k) => new URL(srcMeta[k].url).hostname.replace(/^www\./, "")))];
-  const tools = domains.length ? [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, allowed_domains: domains }] : [];
+  const tools = domains.length ? [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: Math.max(3, retryable.length + 1), allowed_domains: domains }] : [];
   return callClaude({ apiKey, system, user, tools });
 }
 

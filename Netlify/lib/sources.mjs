@@ -3,8 +3,8 @@ import { extractText, getDocumentProxy } from "unpdf";
 
 export const NATIONAL_SOURCES = {
   agdirect: { url: "https://www.agdirect.com/rates", kind: "html", label: "AgDirect equipment loan rates page" },
-  canola: { url: "https://www.ams.usda.gov/mnreports/ams_2887.pdf", kind: "pdf", label: "USDA National Daily Sunflower, Canola, Millet and Flaxseed Report" },
-  pulses: { url: "https://www.ams.usda.gov/mnreports/AMS_2914.pdf", kind: "pdf", label: "USDA Weekly Bean, Pea and Lentil Market Review" },
+  canola: { url: "https://www.ams.usda.gov/mnreports/ams_2887.pdf", alt: ["https://ams2.prod.usda.gov/mnreports/AMS_2887.pdf", "https://ams.prod.usda.gov/mnreports/AMS_2887.pdf"], kind: "pdf", label: "USDA National Daily Sunflower, Canola, Millet and Flaxseed Report" },
+  pulses: { url: "https://www.ams.usda.gov/mnreports/AMS_2914.pdf", alt: ["https://ams2.prod.usda.gov/mnreports/AMS_2914.pdf", "https://ams.prod.usda.gov/mnreports/AMS_2914.pdf"], kind: "pdf", label: "USDA Weekly Bean, Pea and Lentil Market Review" },
   // Monthly NASS report; the file name changes each release, so it's found from the listing page.
   barley: { url: "https://esmis.nal.usda.gov/publication/agricultural-prices", kind: "nass", label: "USDA NASS Agricultural Prices (monthly), barley tables" },
   canada: { url: "https://mygrainexchange.com/en/prices", kind: "html", label: "My Grain Exchange Western Canada delivered prices (CAD)" },
@@ -13,7 +13,7 @@ export const NATIONAL_SOURCES = {
 export const CHESTER_SOURCES = {
   egt: { url: "https://www.bungeag.com/locations/chester-mt/", kind: "html", label: "EGT/Bunge Chester cash bids page" },
   columbia: { url: "https://columbiagrain.com/location/chester-mt/", kind: "html", label: "Columbia Grain Chester location page" },
-  usda: { url: "https://www.ams.usda.gov/mnreports/ams_2771.pdf", kind: "pdf", label: "USDA Montana Daily Elevator Grain Bids" },
+  usda: { url: "https://www.ams.usda.gov/mnreports/ams_2771.pdf", alt: ["https://ams2.prod.usda.gov/mnreports/AMS_2771.pdf", "https://ams.prod.usda.gov/mnreports/AMS_2771.pdf"], kind: "pdf", label: "USDA Montana Daily Elevator Grain Bids" },
 };
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36";
@@ -66,12 +66,22 @@ async function fetchOne(key, src) {
       const { text } = await fetchNassBarley(src);
       return { key, ok: text.length > 400, text: text.slice(0, MAX_CHARS), error: text.length > 400 ? null : "barley tables not found" };
     }
-    const res = await fetch(src.url, {
-      headers: { "User-Agent": UA, Accept: src.kind === "pdf" ? "application/pdf" : "text/html,application/xhtml+xml" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(25000),
-    });
-    if (!res.ok) return { key, ok: false, error: `HTTP ${res.status}` };
+    let res, lastErr;
+    for (const url of [src.url, ...(src.alt || [])]) {
+      try {
+        res = await fetch(url, {
+          headers: { "User-Agent": UA, Accept: src.kind === "pdf" ? "application/pdf,*/*" : "text/html,application/xhtml+xml", "Accept-Language": "en-US,en;q=0.9" },
+          redirect: "follow",
+          signal: AbortSignal.timeout(25000),
+        });
+        if (res.ok) break;
+        lastErr = `HTTP ${res.status}`;
+      } catch (e) {
+        lastErr = String((e && e.message) || e).slice(0, 120);
+      }
+      res = null;
+    }
+    if (!res) return { key, ok: false, error: lastErr || "couldn't reach it" };
     let text;
     if (src.kind === "pdf") {
       const pdf = await getDocumentProxy(new Uint8Array(await res.arrayBuffer()));

@@ -64,12 +64,14 @@ const errText = (e) => String((e && e.message) || e).slice(0, 200);
 
 async function refreshNational({ apiKey, problems }) {
   const current = await getNational();
-  const complete = current && current.barley && current.canada && current.fx;
+  // Retry sooner than 6 hours if the last national refresh had gaps.
+  const complete = current && current.barley && current.canada && current.fx && !current.gaps;
   if (complete && current.updatedAt && Date.now() - Date.parse(current.updatedAt) < NATIONAL_MAX_AGE_MS) return current;
   const [sources, fx] = await Promise.all([
     fetchSources(NATIONAL_SOURCES),
     fetchUsdCad().catch((e) => { problems.push("Exchange rate: " + errText(e)); return null; }),
   ]);
+  const before = problems.length;
   const next = { ...(current || {}) };
   if (fx) next.fx = fx;
   try {
@@ -90,6 +92,7 @@ async function refreshNational({ apiKey, problems }) {
     return current;
   }
   next.updatedAt = new Date().toISOString();
+  next.gaps = problems.length - before;
   await saveNational(next);
   return next;
 }
