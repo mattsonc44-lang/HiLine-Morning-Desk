@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one working screen — futures strip on top, grain bids on the left, policy + banking news on the right; stacks on phones. */
+/* Layout: one working screen — grain bids on the left, policy + banking news on the right; stacks on phones. */
 :root {
   --bg: #F2F4F1;
   --surface: #FFFFFF;
@@ -71,14 +71,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .btn-quiet:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #zip-msg { overflow-wrap: anywhere; }
 
-/* Futures strip */
-.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.tick { padding: 12px 16px; border-right: 1px solid var(--line); min-width: 0; }
-.tick:last-child { border-right: 0; }
-.tick .lbl { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.tick .px { font-family: var(--font-data); font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 500; }
-.tick .sym { font-family: var(--font-data); font-size: 11px; color: var(--muted); }
-.strip-note { grid-column: 1 / -1; border-top: 1px solid var(--line); padding: 6px 16px; font-size: 12px; color: var(--muted); }
 
 /* Main grid */
 .cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -159,9 +151,6 @@ img { max-width: 100%; }
     </div>
   </header>
 
-  <section class="strip" id="strip" aria-label="Wheat futures">
-    <div class="tick"><div class="lbl">Wheat futures</div><div class="empty">Prices load with the briefing.</div></div>
-  </section>
 
   <div class="cols">
     <div class="col">
@@ -245,16 +234,6 @@ img { max-width: 100%; }
   let activeClass = {};
   try { activeClass = JSON.parse(localStorage.getItem("hl-tabs") || "{}") || {}; } catch {}
 
-  function renderStrip(f) {
-    const s = $("strip"); s.replaceChildren();
-    if (!f || !Array.isArray(f.items) || !f.items.length) { s.append(el("div", "tick", "No futures in today's briefing.")); return; }
-    f.items.forEach((it) => {
-      const t = el("div", "tick");
-      t.append(el("div", "lbl", it.label), el("div", "px", money(it.price)), el("div", "sym", it.symbol || ""));
-      s.append(t);
-    });
-    if (f.asOf || f.source) s.append(el("div", "strip-note", [f.source, f.asOf].filter(Boolean).join(" · ")));
-  }
 
   function bidTable(cls) {
     const wrap = el("div", "tbl-wrap");
@@ -496,7 +475,6 @@ img { max-width: 100%; }
       $("updated").textContent = "No local briefing for this ZIP yet.";
     }
     $("h-usda").textContent = (d.usda && d.usda.title) || "Regional ranges";
-    renderStrip(d.futures);
     $("bids-asof").textContent = d.bids && d.bids.asOf ? d.bids.asOf : "";
     renderBids(d.bids || {});
     renderUsda(d.usda);
@@ -508,7 +486,6 @@ img { max-width: 100%; }
       const town = d.place && d.place.city ? d.place.city : "this ZIP";
       $("bids").replaceChildren(el("div", "empty", "Nearby elevator bids for " + town + " show here after the first refresh."));
       $("usda").replaceChildren(el("div", "empty", "USDA regional price ranges for your state show here after the first refresh."));
-      $("strip").replaceChildren(el("div", "tick", "Futures come from the local bid boards."));
     }
   }
 
