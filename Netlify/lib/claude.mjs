@@ -65,6 +65,14 @@ const EXTRACT = {
     ask: "canola: report date; bids in $/cwt for every plant listed (Velva ND first if present); use the first five delivery columns the report lists as cols (first one usually \"Current\"); chg = the day's change on the first column as a signed number.",
     shape: `"canola": null | { "asOf": "USDA report of Oct 21, 2026", "cols": ["Current","Nov","Dec","Jan","Mar"], "rows": [ { "loc": "Velva, ND", "vals": [23.91,24.10,24.30,24.50,24.96], "chg": -0.25 } ] }`,
   },
+  barley: {
+    ask: "barley: from the NASS monthly Agricultural Prices barley tables: the release date and the latest month covered; for each state listed plus \"US\" (use 2-letter state codes), the price received in $/bu for the prior month and the latest month, for all barley, malting barley and feed barley. Use null where the report withholds a value (shown as (D) or -). Also the report file URL given at the top of the source text.",
+    shape: `"barley": null | { "asOf": "August 2026 (NASS, released Sep 29, 2026)", "month": "Aug", "prevMonth": "Jul", "url": "https://esmis.nal.usda.gov/.../agpr0926.txt", "malting": { "MT": [5.20, 5.43], "US": [5.70, 5.86] }, "feed": { "MT": [3.71, null], "US": [3.80, 3.86] }, "all": { "MT": [4.69, 4.96], "US": [5.40, 5.55] } }`,
+  },
+  canada: {
+    ask: "canada: the My Grain Exchange delivered price table (Canadian dollars). For each of these that's listed: Malt Barley, Feed Barley, Canola, Flax, Yellow Flax, Yellow Mustard, Brown Mustard, Oriental Mustard, Kabuli Chickpeas, Red Lentils, Large Green Lentils, Small Green Lentils, French Green Lentils, Yellow Peas, Green Peas: crop name as shown, price as a number, unit (\"bu\" or \"lb\"), the 7-day bid range as shown (e.g. \"$5.52–$6.80\"), and its last-updated date (e.g. \"Oct 26\"). Keep the order of the list above.",
+    shape: `"canada": null | { "rows": [ { "crop": "Malt Barley", "price": 6.67, "unit": "bu", "range": "$5.52–$6.80", "updated": "Oct 26" } ] }`,
+  },
   pulses: {
     ask: "pulses: report date; yellow peas, green peas, Richlea, Brewer and Pardina lentils, and chickpeas (garbanzos) for Min-Dak and PNW where listed: bid range string, average and year-ago as numbers ($/cwt).",
     shape: `"pulses": null | { "asOf": "USDA weekly review of Oct 19, 2026", "rows": [ { "crop": "Yellow peas", "region": "Min-Dak", "range": "7.92–11.67", "avg": 9.24, "yearAgo": 8.83 } ] }`,

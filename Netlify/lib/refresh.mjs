@@ -1,5 +1,5 @@
 // One refresh for one ZIP: national data (shared, refreshed at most every 6 hours), local bids, news.
-import { fetchSources, NATIONAL_SOURCES, CHESTER_SOURCES } from "./sources.mjs";
+import { fetchSources, fetchUsdCad, NATIONAL_SOURCES, CHESTER_SOURCES } from "./sources.mjs";
 import { extractFixed, researchLocal, researchNews } from "./claude.mjs";
 import { HOME_ZIP, getBriefing, saveBriefing, getStatus, saveStatus, getNational, saveNational } from "./store.mjs";
 import { placeFor } from "./place.mjs";
@@ -11,11 +11,13 @@ const STATIC = {
   egt: { name: "EGT / Bunge — Chester", location: "3301 Laird Rd, Chester", url: "https://www.bungeag.com/locations/chester-mt/#cashbids" },
   columbia: { name: "Columbia Grain — Chester", location: "891 US Hwy 2, Chester", url: "https://columbiagrain.com/location/chester-mt/" },
   columbiaCard: { name: "Columbia Grain — Chester", location: "891 US Hwy 2, Chester", note: "Bids load inside their site and through the Bushel app, so they can't be pulled here yet.", url: "https://columbiagrain.com/location/chester-mt/", urlLabel: "Chester bids page ↗" },
-  stricksCard: { name: "Stricks Ag — Chester", location: "114 E Washington Ave, Chester", note: "No bids posted online. Call the elevator office.", phone: "406-759-6489", url: "https://stricksag.com/contact-us/", urlLabel: "Contact page ↗" },
+  stricksCard: { name: "Stricks Ag — Chester", location: "114 E Washington Ave, Chester", note: "Buys chickpeas, lentils, peas and wheat. No bids posted online; call the elevator office.", phone: "406-759-6489", url: "https://stricksag.com/contact-us/", urlLabel: "Contact page ↗" },
   usda: { title: "Montana regional ranges", url: CHESTER_SOURCES.usda.url, note: "Delivered-to-truck ranges. The report has no Hi-Line region; North Central and Golden Triangle are closest." },
   agdirect: { url: "https://www.agdirect.com/rates", note: "Variable is Prime ± spread; not available on leases. Subject to credit approval; 0–45 day fixed-rate lock with no fee." },
   canola: { url: NATIONAL_SOURCES.canola.url, note: "Delivered by truck to crushers. Chg is the day's move on the current bid. Divide by 2 for $/bu (50 lb bu)." },
   pulses: { url: NATIONAL_SOURCES.pulses.url, note: "Conventional, delivered to warehouse. Min-Dak covers North Dakota and Montana buyers. Multiply peas by 0.6 for $/bu. Call a local pulse buyer for your own bid." },
+  barley: { note: "Monthly average price farmers received, from USDA NASS. It runs about a month behind." },
+  canada: { url: NATIONAL_SOURCES.canada.url, note: "Western Canada delivered prices in Canadian dollars, from My Grain Exchange. A reference for crops with no U.S. public bid, like mustard and flax." },
 };
 
 const FUT_LABELS = { MW: "MGEX Spring Wheat", KE: "KC HRW Wheat", KW: "KC HRW Wheat", ZW: "CBOT Wheat", ZC: "Corn", ZS: "Soybeans", RS: "ICE Canola", ZM: "Soy Meal", ZL: "Soy Oil", ZO: "Oats" };
@@ -62,9 +64,14 @@ const errText = (e) => String((e && e.message) || e).slice(0, 200);
 
 async function refreshNational({ apiKey, problems }) {
   const current = await getNational();
-  if (current && current.updatedAt && Date.now() - Date.parse(current.updatedAt) < NATIONAL_MAX_AGE_MS) return current;
-  const sources = await fetchSources(NATIONAL_SOURCES);
+  const complete = current && current.barley && current.canada && current.fx;
+  if (complete && current.updatedAt && Date.now() - Date.parse(current.updatedAt) < NATIONAL_MAX_AGE_MS) return current;
+  const [sources, fx] = await Promise.all([
+    fetchSources(NATIONAL_SOURCES),
+    fetchUsdCad().catch((e) => { problems.push("Exchange rate: " + errText(e)); return null; }),
+  ]);
   const next = { ...(current || {}) };
+  if (fx) next.fx = fx;
   try {
     const { data: m = {} } = await extractFixed({ apiKey, sources, srcMeta: NATIONAL_SOURCES });
     if (m.agdirect && Array.isArray(m.agdirect.tiers) && m.agdirect.tiers.length) next.agdirect = { ...STATIC.agdirect, asOf: m.agdirect.asOf, terms: m.agdirect.terms, tiers: m.agdirect.tiers };
@@ -73,6 +80,11 @@ async function refreshNational({ apiKey, problems }) {
     else problems.push("Canola report: " + (sources.canola.ok ? "couldn't read it" : sources.canola.error));
     if (m.pulses && Array.isArray(m.pulses.rows) && m.pulses.rows.length) next.pulses = { ...STATIC.pulses, asOf: m.pulses.asOf, rows: m.pulses.rows };
     else problems.push("Pulse report: " + (sources.pulses.ok ? "couldn't read it" : sources.pulses.error));
+    if (m.barley && m.barley.malting && Object.keys(m.barley.malting).length) next.barley = { ...STATIC.barley, ...m.barley };
+    else problems.push("NASS barley prices: " + (sources.barley.ok ? "couldn't read them" : sources.barley.error));
+    const canRows = m.canada && Array.isArray(m.canada.rows) ? m.canada.rows.filter((r) => r && r.crop && isNum(r.price)) : [];
+    if (canRows.length >= 3) next.canada = { ...STATIC.canada, asOf: new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", month: "short", day: "numeric", year: "numeric" }).format(new Date()), rows: canRows };
+    else problems.push("Canadian prices: " + (sources.canada.ok ? "couldn't read them" : sources.canada.error));
   } catch (e) {
     problems.push("AgDirect, canola and pulse data: " + errText(e));
     return current;
@@ -155,7 +167,7 @@ export async function runRefresh({ apiKey, zip, trigger }) {
     bids: local.bids,
     usda: local.usda,
     agdirect: national && national.agdirect,
-    specialty: { canola: national && national.canola, pulses: national && national.pulses },
+    specialty: { canola: national && national.canola, pulses: national && national.pulses, barley: national && national.barley, canada: national && national.canada, fx: national && national.fx },
     policy: prev.policy,
     banking: prev.banking,
   };

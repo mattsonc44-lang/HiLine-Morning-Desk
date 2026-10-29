@@ -45,7 +45,8 @@ export async function getNational() {
   if (n) return n;
   const seed = await loadSeed();
   if (!seed) return null;
-  return { updatedAt: null, agdirect: seed.agdirect, canola: seed.specialty && seed.specialty.canola, pulses: seed.specialty && seed.specialty.pulses };
+  const sp = seed.specialty || {};
+  return { updatedAt: null, agdirect: seed.agdirect, canola: sp.canola, pulses: sp.pulses, barley: sp.barley, canada: sp.canada, fx: sp.fx };
 }
 export const saveNational = (n) => setJSON("national", n);
 
