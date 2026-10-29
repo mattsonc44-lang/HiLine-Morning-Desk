@@ -397,6 +397,8 @@ img { max-width: 100%; }
       });
       box.append(grid);
     }
+    const afterBuyers = box.lastChild; // mustard goes right under the buyer cards, near the top
+    const mustardNodes = [];
 
     // Barley: NASS monthly price received, visitor's state next to the U.S.
     if (b && b.malting) {
@@ -446,12 +448,12 @@ img { max-width: 100%; }
       // Mustard: the Canadian bid in cents/lb and $/cwt, both currencies.
       const mustard = ca.rows.filter((r) => /mustard/i.test(r.crop) && r.unit === "lb");
       if (mustard.length) {
-        box.append(sectionHead("Mustard — Canadian bid in US dollars", ca.asOf ? "Delivered Western Canada · collected " + ca.asOf : "Delivered Western Canada", ca.url, "My Grain Exchange ↗"));
+        mustardNodes.push(sectionHead("Mustard — Canadian bid in US dollars", ca.asOf ? "Delivered Western Canada · collected " + ca.asOf : "Delivered Western Canada", ca.url, "My Grain Exchange ↗"));
         const cents = (v) => (typeof v === "number" ? (v * 100).toFixed(1) + "¢" : "—");
         const cwt = (v) => (typeof v === "number" ? "$" + (v * 100).toFixed(2) : "—");
         const rows = mustard.map((r) => { const u = toUsd(r.price); return [[r.crop.replace(/\s*mustard/i, ""), ""], [cents(r.price), "n"], [cents(u), "n cash"], [cwt(u), "n cash"], [r.updated || "—", "n"]]; });
-        box.append(simpleTable([["Mustard", ""], ["CAD /lb", "n"], ["USD /lb", "n"], ["USD /cwt", "n"], ["Updated", "n"]], rows));
-        box.append(el("div", "hint", fxLine + " $/cwt is the per-pound price × 100."));
+        mustardNodes.push(simpleTable([["Mustard", ""], ["CAD /lb", "n"], ["USD /lb", "n"], ["USD /cwt", "n"], ["Updated", "n"]], rows));
+        mustardNodes.push(el("div", "hint", fxLine + " $/cwt is the per-pound price × 100."));
       }
 
       const others = ca.rows.filter((r) => !mustard.includes(r));
@@ -464,6 +466,10 @@ img { max-width: 100%; }
       }
     }
 
+    if (mustardNodes.length) {
+      const before = afterBuyers ? afterBuyers.nextSibling : box.firstChild;
+      mustardNodes.forEach((n) => box.insertBefore(n, before));
+    }
     if (!box.children.length) box.append(el("div", "empty", "No barley or specialty crop prices in today's briefing."));
   }
 
