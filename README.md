@@ -9,7 +9,7 @@ One page for the morning: Chester-area elevator bids, wheat futures, USDA Montan
   - **59522** reads the Chester elevator pages directly (EGT/Bunge, Columbia Grain) and the USDA Montana report.
   - **Any other ZIP** has Claude search for the 2–3 nearest elevators that post bids online, plus that state's USDA daily grain report, and finds state-specific policy and banking news. The first time someone opens a new ZIP, a refresh starts automatically.
   - AgDirect rates, canola and pulse prices are shared by every ZIP and refreshed at most every 6 hours.
-- `netlify/functions/scheduled-refresh.mjs` runs weekdays at 14:50 UTC (8:50 AM MDT / 7:50 AM MST) for 59522 plus the ZIPs opened in the last 7 days (up to `MAX_SCHEDULED_ZIPS`, default 10).
+- `Netlify/functions/scheduled-refresh.mjs` runs weekdays at 14:50 UTC (8:50 AM MDT / 7:50 AM MST) for 59522 plus the ZIPs opened in the last 7 days (up to `MAX_SCHEDULED_ZIPS`, default 10).
 - The **Refresh now** button posts to `/api/refresh`: 5-minute cooldown per ZIP, and manual plus first-look refreshes across all ZIPs are capped at `MAX_REFRESHES_PER_DAY` (default 30).
 - Refreshes run in `refresh-background.mjs` and save to Netlify Blobs. If a source fails, the previous numbers for that section stay up and the gap shows under the Refresh button.
 - `seed/briefing.json` is shown for 59522 until the first refresh runs.
@@ -29,7 +29,7 @@ Optional environment variables: `MAX_REFRESHES_PER_DAY` (default 30), `MAX_SCHED
 
 ## Changing things
 
-- Sources and URLs: `netlify/lib/sources.mjs`
-- Elevator cards, notes: `STATIC` in `netlify/lib/refresh.mjs`
-- What news to look for: `researchNews` in `netlify/lib/claude.mjs`
-- Schedule: `config.schedule` in `netlify/functions/scheduled-refresh.mjs` (UTC)
+- Sources and URLs: `Netlify/lib/sources.mjs`
+- Elevator cards, notes: `STATIC` in `Netlify/lib/refresh.mjs`
+- What news to look for: `researchNews` in `Netlify/lib/claude.mjs`
+- Schedule: `config.schedule` in `Netlify/functions/scheduled-refresh.mjs` (UTC)
