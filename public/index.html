@@ -72,6 +72,30 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 #zip-msg { overflow-wrap: anywhere; }
 
 
+/* Weather band */
+.wx { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); }
+.wx-now { padding: 16px 20px; border-right: 1px solid var(--line); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.wx-now .row { display: flex; align-items: center; gap: 14px; }
+.wx-now .temp { font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; }
+.wx-now .short { font-weight: 600; font-size: 15px; }
+.wx-now .meta { font-size: 13px; color: var(--muted); }
+.wx-now .detail { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.wx-ico { width: 44px; height: 44px; flex: none; color: var(--accent); }
+.wx-ico.sm { width: 28px; height: 28px; }
+.wx-days-wrap { overflow-x: auto; min-width: 0; }
+.wx-days { display: grid; grid-template-columns: repeat(7, minmax(92px, 1fr)); min-width: 644px; height: 100%; }
+.wx-day { padding: 14px 10px; border-right: 1px solid var(--line); display: grid; gap: 4px; justify-items: center; text-align: center; align-content: start; }
+.wx-day:last-child { border-right: 0; }
+.wx-day .dn { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.wx-day .hl { white-space: nowrap; font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 15px; }
+.wx-day .hl .lo { color: var(--muted); }
+.wx-day .pp { font-size: 12px; color: var(--accent); font-family: var(--font-data); }
+.wx-day .wd { font-size: 11px; color: var(--muted); }
+.wx-day .sf { font-size: 12px; color: var(--ink); line-height: 1.3; }
+.wx-foot { grid-column: 1 / -1; border-top: 1px solid var(--line); padding: 8px 20px; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; }
+.wx-wind { display: flex; flex-wrap: wrap; gap: 2px 10px; font-family: var(--font-data); }
+@media (max-width: 760px) { .wx { grid-template-columns: minmax(0, 1fr); } .wx-now { border-right: 0; border-bottom: 1px solid var(--line); } }
+
 /* Main grid */
 .cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
@@ -151,6 +175,11 @@ img { max-width: 100%; }
     </div>
   </header>
 
+  <section class="wx" id="wx" aria-label="Weather">
+    <div class="wx-now" id="wx-now"><div class="empty">Loading the forecast…</div></div>
+    <div class="wx-days-wrap"><div class="wx-days" id="wx-days"></div></div>
+    <div class="wx-foot" id="wx-foot"></div>
+  </section>
 
   <div class="cols">
     <div class="col">
@@ -514,6 +543,90 @@ img { max-width: 100%; }
   const autoStarted = {};
   let loadSeq = 0;
 
+  // ---------- Weather (National Weather Service, by ZIP) ----------
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function wxKind(t, day) {
+    t = (t || "").toLowerCase();
+    if (/thunder|t-storm/.test(t)) return "storm";
+    if (/snow|flurr|blizzard|sleet|ice|freezing/.test(t)) return "snow";
+    if (/rain|shower|drizzle/.test(t)) return "rain";
+    if (/fog|haze|smoke/.test(t)) return "fog";
+    if (/partly|mostly sunny|mostly clear|few|scattered clouds/.test(t)) return day ? "partly" : "partly-night";
+    if (/cloud|overcast/.test(t)) return "cloud";
+    if (/wind|breez|blustery/.test(t)) return "wind";
+    return day ? "sun" : "moon";
+  }
+  // Clean line icons drawn in the accent color.
+  const WX_PATHS = {
+    sun: '<circle cx="24" cy="24" r="8"/><path d="M24 6v5M24 37v5M6 24h5M37 24h5M11.3 11.3l3.5 3.5M33.2 33.2l3.5 3.5M11.3 36.7l3.5-3.5M33.2 14.8l3.5-3.5"/>',
+    moon: '<path d="M31 9a14 14 0 1 0 8 23 12 12 0 0 1-8-23z"/>',
+    partly: '<circle cx="18" cy="17" r="6"/><path d="M18 5v3M6 17h3M9.5 8.5l2 2M26.5 8.5l-2 2"/><path d="M16 38h18a7 7 0 0 0 0-14 9 9 0 0 0-17 3 5.5 5.5 0 0 0-1 11z"/>',
+    "partly-night": '<path d="M22 6a9 9 0 1 0 6 15 8 8 0 0 1-6-15z"/><path d="M16 38h18a7 7 0 0 0 0-14 9 9 0 0 0-17 3 5.5 5.5 0 0 0-1 11z"/>',
+    cloud: '<path d="M13 36h21a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-2 13z"/>',
+    rain: '<path d="M13 30h21a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-2 13z"/><path d="M17 35l-2 5M25 35l-2 5M33 35l-2 5"/>',
+    snow: '<path d="M13 30h21a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-2 13z"/><path d="M17 36v4M15 38h4M25 36v4M23 38h4M33 36v4M31 38h4"/>',
+    storm: '<path d="M13 30h21a8 8 0 0 0 0-16 10 10 0 0 0-19 3 6.5 6.5 0 0 0-2 13z"/><path d="M25 31l-4 6h5l-3 6"/>',
+    fog: '<path d="M8 18h32M12 24h28M8 30h32M14 36h22"/>',
+    wind: '<path d="M6 18h24a5 5 0 1 0-5-5M6 26h32a5 5 0 1 1-5 5M6 34h16"/>',
+  };
+  function wxIcon(kind, cls) {
+    const s = document.createElementNS(SVGNS, "svg");
+    s.setAttribute("viewBox", "0 0 48 48"); s.setAttribute("class", "wx-ico" + (cls ? " " + cls : ""));
+    s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2.4");
+    s.setAttribute("stroke-linecap", "round"); s.setAttribute("stroke-linejoin", "round"); s.setAttribute("aria-hidden", "true");
+    s.innerHTML = WX_PATHS[kind] || WX_PATHS.cloud; // fixed strings above, never page data
+    return s;
+  }
+  const dayLabel = (d, i) => {
+    if (i === 0) return "Today";
+    const dt = new Date(d.date + "T12:00:00");
+    return isNaN(dt) ? (d.name || "") : dt.toLocaleDateString("en-US", { weekday: "short" });
+  };
+
+  let wxSeq = 0;
+  async function loadWeather() {
+    const mine = ++wxSeq, forZip = zip;
+    const now = $("wx-now"), days = $("wx-days"), foot = $("wx-foot");
+    try {
+      const r = await fetch("/api/weather?zip=" + forZip, { cache: "no-store" });
+      const ok = (r.headers.get("content-type") || "").includes("json");
+      const w = ok ? await r.json() : null;
+      if (mine !== wxSeq) return;
+      if (!r.ok || !w || w.error) {
+        now.replaceChildren(el("div", "empty", (w && w.error) || "The forecast isn't available right now."));
+        days.replaceChildren(); foot.replaceChildren(); return;
+      }
+      // Now
+      const row = el("div", "row");
+      row.append(wxIcon(wxKind(w.now.short, w.now.isDaytime)), el("div", "temp", typeof w.now.temp === "number" ? w.now.temp + "°" : "—"));
+      const sub = [w.now.wind && "Wind " + w.now.wind, typeof w.now.precip === "number" && w.now.precip + "% precip"].filter(Boolean).join(" · ");
+      now.replaceChildren(el("div", "dn hint", "Now · " + (w.place || "")), row, el("div", "short", w.now.short || ""), el("div", "meta", sub));
+      if (w.today && w.today.detail) now.append(el("div", "detail", (w.today.name ? w.today.name + ": " : "") + w.today.detail));
+      // 7 days
+      days.replaceChildren(...(w.days || []).map((d, i) => {
+        const c = el("div", "wx-day");
+        const hl = el("div", "hl");
+        hl.append(document.createTextNode(d.high != null ? d.high + "°" : "—"), el("span", "lo", " / " + (d.low != null ? d.low + "°" : "—")));
+        c.append(el("div", "dn", dayLabel(d, i)), wxIcon(wxKind(d.short || d.nightShort, d.short != null), "sm"), hl, el("div", "sf", d.short || d.nightShort || ""));
+        if (d.precip) c.append(el("div", "pp", d.precip + "% precip"));
+        if (d.wind) c.append(el("div", "wd", d.wind));
+        return c;
+      }));
+      // Next hours of wind, for spraying and hauling
+      foot.replaceChildren();
+      const wind = el("div", "wx-wind");
+      wind.append(el("span", null, "Wind next hours:"));
+      (w.hourly || []).filter((_, i) => i % 2 === 0).slice(0, 6).forEach((h) => {
+        const t = new Date(h.time).toLocaleTimeString("en-US", { hour: "numeric" });
+        wind.append(el("span", null, t + " " + (h.dir || "") + " " + (h.wind || "")));
+      });
+      const src = el("span"); src.append(document.createTextNode("National Weather Service" + (w.stale ? " (last saved forecast)" : "") + " · "), link(w.url, "Full forecast ↗"));
+      foot.append(wind, src);
+    } catch (e) {
+      if (mine === wxSeq) now.replaceChildren(el("div", "empty", "Couldn't load the forecast. Check your connection."));
+    }
+  }
+
   async function load() {
     const mine = ++loadSeq, forZip = zip;
     try {
@@ -555,6 +668,7 @@ img { max-width: 100%; }
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     wasRunning = false; msg.textContent = ""; msg.classList.remove("warn");
     load();
+    loadWeather();
   }
 
   $("zip-form").addEventListener("submit", (e) => {
@@ -586,6 +700,8 @@ img { max-width: 100%; }
   btn.addEventListener("click", () => startRefresh(false));
 
   load();
+  loadWeather();
+  setInterval(() => { if (document.visibilityState === "visible") loadWeather(); }, 30 * 60 * 1000);
   // Pick up the morning refresh if the page was left open.
   setInterval(() => { if (document.visibilityState === "visible" && !pollTimer) load(); }, 10 * 60 * 1000);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !pollTimer) load(); });
