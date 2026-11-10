@@ -96,6 +96,27 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .wx-wind { display: flex; flex-wrap: wrap; gap: 2px 10px; font-family: var(--font-data); }
 @media (max-width: 760px) { .wx { grid-template-columns: minmax(0, 1fr); } .wx-now { border-right: 0; border-bottom: 1px solid var(--line); } }
 
+/* Markets watchlist */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.stock-add { display: flex; gap: 6px; align-items: center; }
+.stock-add input { font: 500 14px var(--font-data); width: 17ch; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); text-transform: uppercase; }
+.stock-add input::placeholder { text-transform: none; color: var(--muted); }
+.stock-add input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.stocks { overflow: hidden; }
+.stock-grid { margin-right: -1px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.stock { position: relative; padding: 12px 16px 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 2px; min-width: 0; }
+.stock .sym { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+.stock .nm { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 18px; }
+.stock .px { font-family: var(--font-data); font-size: 19px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.stock .ch { font-family: var(--font-data); font-size: 13px; font-variant-numeric: tabular-nums; }
+.stock .ch.up { color: var(--up); } .stock .ch.down { color: var(--down); } .stock .ch.flat { color: var(--muted); }
+.stock svg.spark { width: 100%; height: 30px; margin-top: 4px; display: block; }
+.stock .rm { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); font-size: 16px; line-height: 1; cursor: pointer; }
+.stock .rm:hover { color: var(--down); background: var(--bg); }
+.stock .rm:focus-visible { outline: 2px solid var(--accent); }
+.stock.err .px { font-size: 13px; color: var(--muted); font-family: var(--font-body); }
+.stock-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 8px 16px; }
+
 /* Main grid */
 .cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
@@ -179,6 +200,19 @@ img { max-width: 100%; }
     <div class="wx-now" id="wx-now"><div class="empty">Loading the forecast…</div></div>
     <div class="wx-days-wrap"><div class="wx-days" id="wx-days"></div></div>
     <div class="wx-foot" id="wx-foot"></div>
+  </section>
+
+  <section class="panel stocks" aria-labelledby="h-stocks">
+    <div class="panel-h">
+      <h2 id="h-stocks">Markets</h2>
+      <form class="stock-add" id="stock-form" novalidate>
+        <label for="stock-input" class="sr">Add a stock symbol</label>
+        <input id="stock-input" maxlength="15" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Symbol, e.g. DE">
+        <button type="submit" class="btn-quiet">Add</button>
+      </form>
+    </div>
+    <div class="stock-grid" id="stock-grid"><div class="empty">Loading quotes…</div></div>
+    <div class="stock-foot"><span class="hint" id="stock-msg" role="status" aria-live="polite"></span><span class="hint" id="stock-asof"></span></div>
   </section>
 
   <div class="cols">
@@ -543,6 +577,86 @@ img { max-width: 100%; }
   const autoStarted = {};
   let loadSeq = 0;
 
+  // ---------- Markets watchlist (saved in this browser) ----------
+  const DEFAULT_STOCKS = [{ s: "^DJI", label: "Dow Jones" }, { s: "^GSPC", label: "S&P 500" }];
+  const MAX_STOCKS = 12;
+  const cleanSym = (v) => { const t = String(v || "").trim().toUpperCase(); return /^[\^A-Z0-9][A-Z0-9.\-=^]{0,14}$/.test(t) ? t : null; };
+  let myStocks = (() => {
+    try { const a = JSON.parse(localStorage.getItem("hl-stocks") || "[]"); return Array.isArray(a) ? a.map(cleanSym).filter(Boolean) : []; } catch { return []; }
+  })();
+  const saveStocks = () => { try { localStorage.setItem("hl-stocks", JSON.stringify(myStocks)); } catch {} };
+  const allSyms = () => [...DEFAULT_STOCKS.map((d) => d.s), ...myStocks.filter((s) => !DEFAULT_STOCKS.some((d) => d.s === s))];
+
+  function sparkline(vals, up) {
+    const s = document.createElementNS(SVGNS, "svg");
+    s.setAttribute("class", "spark"); s.setAttribute("viewBox", "0 0 100 30"); s.setAttribute("preserveAspectRatio", "none"); s.setAttribute("aria-hidden", "true");
+    if (!Array.isArray(vals) || vals.length < 2) return s;
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+    const pts = vals.map((v, i) => [(i / (vals.length - 1)) * 100, 27 - ((v - lo) / span) * 24]);
+    const line = pts.map((p) => p[0].toFixed(2) + "," + p[1].toFixed(2)).join(" ");
+    const area = document.createElementNS(SVGNS, "polygon");
+    area.setAttribute("points", "0,30 " + line + " 100,30");
+    area.setAttribute("fill", up ? "var(--up)" : "var(--down)"); area.setAttribute("fill-opacity", "0.10");
+    const pl = document.createElementNS(SVGNS, "polyline");
+    pl.setAttribute("points", line); pl.setAttribute("fill", "none");
+    pl.setAttribute("stroke", up ? "var(--up)" : "var(--down)"); pl.setAttribute("stroke-width", "1.6");
+    pl.setAttribute("vector-effect", "non-scaling-stroke"); pl.setAttribute("stroke-linejoin", "round");
+    s.append(area, pl);
+    return s;
+  }
+  const fmtPx = (v) => typeof v === "number" ? v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+
+  function stockTile(q) {
+    const def = DEFAULT_STOCKS.find((d) => d.s === q.symbol);
+    const t = el("div", "stock" + (q.error ? " err" : ""));
+    t.append(el("div", "nm", def ? def.label : (q.name || q.symbol)), el("div", "sym", q.symbol.replace(/^\^/, "")));
+    if (q.error) {
+      t.append(el("div", "px", q.error === "not found" ? "Symbol not found" : "Quote unavailable right now"));
+    } else {
+      const dir = q.change > 0 ? "up" : q.change < 0 ? "down" : "flat";
+      const sign = q.change > 0 ? "+" : "";
+      t.append(el("div", "px", fmtPx(q.price)),
+        el("div", "ch " + dir, q.change == null ? "—" : sign + fmtPx(q.change) + "  (" + sign + q.changePct.toFixed(2) + "%)"),
+        sparkline(q.spark, !(q.spark && q.spark.length > 1 && q.spark[q.spark.length - 1] < q.spark[0])));
+    }
+    if (!def) {
+      const rm = el("button", "rm", "×"); rm.type = "button"; rm.setAttribute("aria-label", "Remove " + q.symbol);
+      rm.addEventListener("click", () => { myStocks = myStocks.filter((s) => s !== q.symbol); saveStocks(); t.remove(); $("stock-msg").textContent = q.symbol + " removed."; });
+      t.append(rm);
+    }
+    return t;
+  }
+
+  let stockSeq = 0;
+  async function loadStocks() {
+    const mine = ++stockSeq;
+    const grid = $("stock-grid");
+    try {
+      const r = await fetch("/api/quotes?s=" + encodeURIComponent(allSyms().join(",")), { cache: "no-store" });
+      const ok = (r.headers.get("content-type") || "").includes("json");
+      const j = ok ? await r.json() : null;
+      if (mine !== stockSeq) return;
+      if (!r.ok || !j) { grid.replaceChildren(el("div", "empty", "Quotes aren't available right now.")); return; }
+      grid.replaceChildren(...j.quotes.map(stockTile));
+      const times = j.quotes.map((q) => q.time).filter(Boolean).sort();
+      const last = times[times.length - 1];
+      $("stock-asof").textContent = last ? "Delayed quotes · last trade " + new Date(last).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZoneName: "short" }) + " · 1-month trend" : "Delayed quotes";
+    } catch (e) {
+      if (mine === stockSeq) grid.replaceChildren(el("div", "empty", "Couldn't load quotes. Check your connection."));
+    }
+  }
+
+  $("stock-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const inp = $("stock-input"), msg = $("stock-msg");
+    const sym = cleanSym(inp.value);
+    if (!sym) { msg.textContent = "Enter a ticker symbol, like DE or AAPL."; return; }
+    if (allSyms().includes(sym)) { msg.textContent = sym + " is already on your list."; inp.value = ""; return; }
+    if (allSyms().length >= MAX_STOCKS) { msg.textContent = "Your list is full (" + MAX_STOCKS + "). Remove one to add another."; return; }
+    myStocks.push(sym); saveStocks(); inp.value = ""; msg.textContent = "Added " + sym + ".";
+    loadStocks();
+  });
+
   // ---------- Weather (National Weather Service, by ZIP) ----------
   const SVGNS = "http://www.w3.org/2000/svg";
   function wxKind(t, day) {
@@ -702,6 +816,8 @@ img { max-width: 100%; }
   load();
   loadWeather();
   setInterval(() => { if (document.visibilityState === "visible") loadWeather(); }, 30 * 60 * 1000);
+  loadStocks();
+  setInterval(() => { if (document.visibilityState === "visible") loadStocks(); }, 5 * 60 * 1000);
   // Pick up the morning refresh if the page was left open.
   setInterval(() => { if (document.visibilityState === "visible" && !pollTimer) load(); }, 10 * 60 * 1000);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !pollTimer) load(); });
