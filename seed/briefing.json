@@ -625,5 +625,103 @@
       }
     ],
     "url": "https://www.ams.usda.gov/mnreports/ams_2771.pdf"
+  },
+  "fertilizer": {
+    "dtn": {
+      "note": "National average retail prices from DTN's weekly survey of about 1,600 retailers. Montana retail prices aren't published; ask your local dealer for a quote.",
+      "asOf": "Nov 2–6, 2026",
+      "priorWeek": "Oct 5–9, 2026",
+      "published": "Nov 11, 2026",
+      "url": "https://www.dtnpf.com/agriculture/web/AG/crops/article/2026/11/11/retail-fertilizer-prices-mixed-first",
+      "rows": [
+        {
+          "product": "DAP",
+          "prior": 934,
+          "current": 950,
+          "yoyPct": 3,
+          "perLbN": null
+        },
+        {
+          "product": "MAP",
+          "prior": 979,
+          "current": 991,
+          "yoyPct": 7,
+          "perLbN": null
+        },
+        {
+          "product": "Potash",
+          "prior": 502,
+          "current": 504,
+          "yoyPct": 3,
+          "perLbN": null
+        },
+        {
+          "product": "Urea",
+          "prior": 672,
+          "current": 662,
+          "yoyPct": 11,
+          "perLbN": 0.72
+        },
+        {
+          "product": "10-34-0",
+          "prior": 702,
+          "current": 704,
+          "yoyPct": 6,
+          "perLbN": null
+        },
+        {
+          "product": "Anhydrous",
+          "prior": 977,
+          "current": 1003,
+          "yoyPct": 17,
+          "perLbN": 0.61
+        },
+        {
+          "product": "UAN28",
+          "prior": 442,
+          "current": 428,
+          "yoyPct": 3,
+          "perLbN": 0.76
+        },
+        {
+          "product": "UAN32",
+          "prior": 485,
+          "current": 484,
+          "yoyPct": 4,
+          "perLbN": 0.76
+        }
+      ]
+    },
+    "iowa": {
+      "url": "https://www.ams.usda.gov/mnreports/ams_2863.pdf",
+      "note": "Iowa distributor prices, F.O.B., current delivery. The nearest state-level fertilizer report USDA publishes; updated every two weeks.",
+      "asOf": "Nov 13, 2026",
+      "rows": [
+        {
+          "product": "Anhydrous Ammonia",
+          "range": "$892.00 - $1,060.00",
+          "avg": 941.75,
+          "chg": 39.42
+        },
+        {
+          "product": "Liquid Nitrogen (32-0-0)",
+          "range": "$435.00 - $585.00",
+          "avg": 510.0,
+          "chg": 0
+        },
+        {
+          "product": "MAP (11-52-0)",
+          "range": "$951.00 - $1,015.00",
+          "avg": 984.0,
+          "chg": 8
+        },
+        {
+          "product": "Potash (0-0-60)",
+          "range": "$489.00 - $540.00",
+          "avg": 507.8,
+          "chg": 8
+        }
+      ]
+    }
   }
 }
