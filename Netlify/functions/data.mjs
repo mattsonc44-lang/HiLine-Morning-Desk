@@ -23,6 +23,7 @@ export default async (req) => {
   if (national) {
     b = b || { zip, place, empty: true };
     if (national.agdirect) b.agdirect = national.agdirect;
+    if (national.fertilizer) b.fertilizer = national.fertilizer;
     const prev = b.specialty || {};
     b.specialty = {
       canola: national.canola || prev.canola,
