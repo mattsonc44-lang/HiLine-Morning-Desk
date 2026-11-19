@@ -117,6 +117,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .stock.err .px { font-size: 13px; color: var(--muted); font-family: var(--font-body); }
 .stock-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 8px 16px; }
 
+td.chg-up { color: var(--down); } td.chg-down { color: var(--up); }
+
 /* Main grid */
 .cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
@@ -244,6 +246,13 @@ img { max-width: 100%; }
         <div class="panel-h"><h2 id="h-agd">AgDirect equipment rates</h2><span class="stamp" id="agd-asof"></span></div>
         <div class="panel-b" id="agd">
           <div class="empty">AgDirect fixed and variable equipment loan rates by amount and term will show here.</div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-fert">
+        <div class="panel-h"><h2 id="h-fert">Fertilizer</h2><span class="hint">Retail $/ton</span></div>
+        <div class="panel-b" id="fert">
+          <div class="empty">National retail fertilizer prices and USDA's Iowa report will show here.</div>
         </div>
       </section>
 
@@ -515,6 +524,31 @@ img { max-width: 100%; }
     if (!box.children.length) box.append(el("div", "empty", "No barley or specialty crop prices in today's briefing."));
   }
 
+  function renderFert(f) {
+    const box = $("fert"); box.replaceChildren();
+    const dtn = f && f.dtn, ia = f && f.iowa;
+    const money = (v) => (typeof v === "number" ? "$" + Math.round(v).toLocaleString("en-US") : "—");
+    if (dtn && Array.isArray(dtn.rows) && dtn.rows.length) {
+      box.append(sectionHead("National average retail", "Week of " + (dtn.asOf || "—") + (dtn.priorWeek ? " vs. " + dtn.priorWeek : ""), dtn.url, "DTN ↗"));
+      const rows = dtn.rows.map((r) => {
+        const d = typeof r.prior === "number" && typeof r.current === "number" ? r.current - r.prior : null;
+        const chg = d == null ? ["—", "n"] : [(d > 0 ? "+" : d < 0 ? "−" : "") + "$" + Math.abs(Math.round(d)), "n " + (d > 0 ? "chg-up" : d < 0 ? "chg-down" : "")];
+        const yoy = typeof r.yoyPct === "number" ? (r.yoyPct > 0 ? "+" : "") + r.yoyPct + "%" : "—";
+        return [[r.product, ""], [money(r.prior), "n"], [money(r.current), "n cash"], chg, [yoy, "n"], [typeof r.perLbN === "number" ? "$" + r.perLbN.toFixed(2) : "", "n"]];
+      });
+      box.append(simpleTable([["Product", ""], ["Month ago", "n"], ["Now", "n"], ["Change", "n"], ["vs. yr ago", "n"], ["$/lb N", "n"]], rows));
+      if (dtn.note) box.append(el("div", "hint", dtn.note));
+    }
+    if (ia && Array.isArray(ia.rows) && ia.rows.length) {
+      box.append(sectionHead("Iowa distributor prices", ia.asOf ? "USDA report of " + ia.asOf : "", ia.url, "USDA report ↗"));
+      const shortRange = (t) => (t ? String(t).replace(/\.00\b/g, "").replace(/\s*-\s*/, "–") : "—");
+      const rows = ia.rows.map((r) => [[r.product, ""], [money(r.avg), "n cash"], [typeof r.chg === "number" && r.chg !== 0 ? (r.chg > 0 ? "+" : "−") + "$" + Math.abs(r.chg).toFixed(2) : "—", "n " + (r.chg > 0 ? "chg-up" : r.chg < 0 ? "chg-down" : "")], [shortRange(r.range), "n"]]);
+      box.append(simpleTable([["Product", ""], ["Avg", "n"], ["Change", "n"], ["Range", "n"]], rows));
+      if (ia.note) box.append(el("div", "hint", ia.note));
+    }
+    if (!box.children.length) box.append(el("div", "empty", "No fertilizer prices in today's briefing."));
+  }
+
   function renderNews(id, items) {
     const ul = $(id); ul.replaceChildren();
     if (!Array.isArray(items) || !items.length) { ul.append(el("li", "empty", "Nothing new in today's briefing.")); return; }
@@ -542,6 +576,7 @@ img { max-width: 100%; }
     renderBids(d.bids || {});
     renderUsda(d.usda);
     renderAgd(d.agdirect);
+    renderFert(d.fertilizer);
     renderSpec(d.specialty);
     renderNews("policy", d.policy);
     renderNews("banking", d.banking);
