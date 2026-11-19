@@ -69,6 +69,10 @@ const EXTRACT = {
     ask: "barley: from the NASS monthly Agricultural Prices barley tables: the release date and the latest month covered; for each state listed plus \"US\" (use 2-letter state codes), the price received in $/bu for the prior month and the latest month, for all barley, malting barley and feed barley. Use null where the report withholds a value (shown as (D) or -). Also the report file URL given at the top of the source text.",
     shape: `"barley": null | { "asOf": "August 2026 (NASS, released Sep 29, 2026)", "month": "Aug", "prevMonth": "Jul", "url": "https://esmis.nal.usda.gov/.../agpr0926.txt", "malting": { "MT": [5.20, 5.43], "US": [5.70, 5.86] }, "feed": { "MT": [3.71, null], "US": [3.80, 3.86] }, "all": { "MT": [4.69, 4.96], "US": [5.40, 5.55] } }`,
   },
+  iowaFert: {
+    ask: "iowaFert: the Iowa Production Cost Report date, and every synthetic fertilizer row (e.g. Anhydrous Ammonia, Liquid Nitrogen 28% or 32%, Urea, DAP, MAP, Potash): product name as shown, the price range string as shown (e.g. \"$892.00 - $1,060.00\"), the average as a number ($/ton), and the change as a signed number (null if not shown).",
+    shape: `"iowaFert": null | { "asOf": "Nov 13, 2026", "rows": [ { "product": "Anhydrous Ammonia", "range": "$892.00 - $1,060.00", "avg": 941.75, "chg": 39.42 } ] }`,
+  },
   canada: {
     ask: "canada: the My Grain Exchange delivered price table (Canadian dollars). For each of these that's listed: Malt Barley, Feed Barley, Canola, Flax, Yellow Flax, Yellow Mustard, Brown Mustard, Oriental Mustard, Kabuli Chickpeas, Red Lentils, Large Green Lentils, Small Green Lentils, French Green Lentils, Yellow Peas, Green Peas: crop name as shown, price as a number, unit (\"bu\" or \"lb\"), the 7-day bid range as shown (e.g. \"$5.52–$6.80\"), and its last-updated date (e.g. \"Oct 26\"). Keep the order of the list above.",
     shape: `"canada": null | { "rows": [ { "crop": "Malt Barley", "price": 6.67, "unit": "bu", "range": "$5.52–$6.80", "updated": "Oct 26" } ] }`,
@@ -172,4 +176,21 @@ Reply with only JSON inside <json></json> tags: {"policy":[{"tag","title","sourc
     { type: "web_fetch_20250910", name: "web_fetch", max_uses: 6 },
   ];
   return callClaude({ apiKey, system, user, tools });
+}
+
+// ---------- Fertilizer: DTN's weekly national retail averages (the article URL changes each week) ----------
+
+export async function researchFertilizer({ apiKey }) {
+  const system = "You read DTN Retail Fertilizer Trends for an ag lender. Copy numbers exactly as published; never estimate or invent. The URL you return must be one you actually fetched.";
+  const user = `Today is ${nowMT()} (Mountain time).
+
+Find the most recent DTN Retail Fertilizer Trends article on dtnpf.com (published weekly, usually Wednesdays) and fetch it. From its national average retail price table ($/ton), give for each of DAP, MAP, Potash, Urea, 10-34-0, Anhydrous, UAN28, UAN32: the prior-month price, the current price, and the percent change from a year ago (signed number). Also the per-pound-of-nitrogen prices for Urea, Anhydrous, UAN28 and UAN32, the current survey week (e.g. "Nov 2–6, 2026"), the prior-month week, and the article's publish date.
+
+Reply with only JSON inside <json></json> tags:
+{ "asOf": "Nov 2–6, 2026", "priorWeek": "Oct 5–9, 2026", "published": "Nov 11, 2026", "url": "https://www.dtnpf.com/...", "rows": [ { "product": "DAP", "prior": 934, "current": 950, "yoyPct": 3, "perLbN": null } ] }`;
+  const tools = [
+    { type: "web_search_20250305", name: "web_search", max_uses: 3, allowed_domains: ["dtnpf.com"] },
+    { type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, allowed_domains: ["dtnpf.com"] },
+  ];
+  return callClaude({ apiKey, system, user, tools, maxTokens: 4000 });
 }

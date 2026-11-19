@@ -1,6 +1,6 @@
 // One refresh for one ZIP: national data (shared, refreshed at most every 6 hours), local bids, news.
 import { fetchSources, fetchUsdCad, NATIONAL_SOURCES, CHESTER_SOURCES } from "./sources.mjs";
-import { extractFixed, researchLocal, researchNews } from "./claude.mjs";
+import { extractFixed, researchLocal, researchNews, researchFertilizer } from "./claude.mjs";
 import { HOME_ZIP, getBriefing, saveBriefing, getStatus, saveStatus, getNational, saveNational } from "./store.mjs";
 import { placeFor } from "./place.mjs";
 
@@ -17,6 +17,8 @@ const STATIC = {
   canola: { url: NATIONAL_SOURCES.canola.url, note: "Delivered by truck to crushers. Chg is the day's move on the current bid. Divide by 2 for $/bu (50 lb bu)." },
   pulses: { url: NATIONAL_SOURCES.pulses.url, note: "Conventional, delivered to warehouse. Min-Dak covers North Dakota and Montana buyers. Multiply peas by 0.6 for $/bu. Call a local pulse buyer for your own bid." },
   barley: { note: "Monthly average price farmers received, from USDA NASS. It runs about a month behind." },
+  dtn: { note: "National average retail prices from DTN's weekly survey of about 1,600 retailers. Montana retail prices aren't published; ask your local dealer for a quote." },
+  iowaFert: { url: NATIONAL_SOURCES.iowaFert.url, note: "Iowa distributor prices, F.O.B., current delivery. The nearest state-level fertilizer report USDA publishes; updated every two weeks." },
   canada: { url: NATIONAL_SOURCES.canada.url, note: "Western Canada delivered prices in Canadian dollars, from My Grain Exchange. A reference for crops with no U.S. public bid, like mustard and flax." },
 };
 
@@ -65,15 +67,21 @@ const errText = (e) => String((e && e.message) || e).slice(0, 200);
 async function refreshNational({ apiKey, problems }) {
   const current = await getNational();
   // Retry sooner than 6 hours if the last national refresh had gaps.
-  const complete = current && current.barley && current.canada && current.fx && !current.gaps;
+  const complete = current && current.barley && current.canada && current.fx && current.fertilizer && !current.gaps;
   if (complete && current.updatedAt && Date.now() - Date.parse(current.updatedAt) < NATIONAL_MAX_AGE_MS) return current;
-  const [sources, fx] = await Promise.all([
+  const [sources, fx, dtnRes] = await Promise.all([
     fetchSources(NATIONAL_SOURCES),
     fetchUsdCad().catch((e) => { problems.push("Exchange rate: " + errText(e)); return null; }),
+    researchFertilizer({ apiKey }).then((r) => r.data, (e) => { problems.push("DTN fertilizer prices: " + errText(e)); return null; }),
   ]);
   const before = problems.length;
   const next = { ...(current || {}) };
   if (fx) next.fx = fx;
+  next.fertilizer = { ...(next.fertilizer || {}) };
+  const dtnRows = dtnRes && Array.isArray(dtnRes.rows) ? dtnRes.rows.filter((r) => r && r.product && isNum(r.current)) : [];
+  if (dtnRows.length >= 4 && /^https:\/\/(www\.)?dtnpf\.com\//.test(dtnRes.url || "")) {
+    next.fertilizer.dtn = { ...STATIC.dtn, asOf: dtnRes.asOf, priorWeek: dtnRes.priorWeek, published: dtnRes.published, url: dtnRes.url, rows: dtnRows };
+  } else if (dtnRes) problems.push("DTN fertilizer prices: couldn't read the latest article");
   try {
     const { data: m = {} } = await extractFixed({ apiKey, sources, srcMeta: NATIONAL_SOURCES });
     if (m.agdirect && Array.isArray(m.agdirect.tiers) && m.agdirect.tiers.length) next.agdirect = { ...STATIC.agdirect, asOf: m.agdirect.asOf, terms: m.agdirect.terms, tiers: m.agdirect.tiers };
@@ -87,6 +95,9 @@ async function refreshNational({ apiKey, problems }) {
     const canRows = m.canada && Array.isArray(m.canada.rows) ? m.canada.rows.filter((r) => r && r.crop && isNum(r.price)) : [];
     if (canRows.length >= 3) next.canada = { ...STATIC.canada, asOf: new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", month: "short", day: "numeric", year: "numeric" }).format(new Date()), rows: canRows };
     else problems.push("Canadian prices: " + (sources.canada.ok ? "couldn't read them" : sources.canada.error));
+    const iaRows = m.iowaFert && Array.isArray(m.iowaFert.rows) ? m.iowaFert.rows.filter((r) => r && r.product && isNum(r.avg)) : [];
+    if (iaRows.length) next.fertilizer.iowa = { ...STATIC.iowaFert, asOf: m.iowaFert.asOf, rows: iaRows };
+    else problems.push("Iowa fertilizer report: " + (sources.iowaFert.ok ? "couldn't read it" : sources.iowaFert.error));
   } catch (e) {
     problems.push("AgDirect, canola and pulse data: " + errText(e));
     return current;
@@ -170,6 +181,7 @@ export async function runRefresh({ apiKey, zip, trigger }) {
     bids: local.bids,
     usda: local.usda,
     agdirect: national && national.agdirect,
+    fertilizer: national && national.fertilizer,
     specialty: { canola: national && national.canola, pulses: national && national.pulses, barley: national && national.barley, canada: national && national.canada, fx: national && national.fx },
     policy: prev.policy,
     banking: prev.banking,

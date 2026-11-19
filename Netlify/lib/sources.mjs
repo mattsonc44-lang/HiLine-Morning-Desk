@@ -8,6 +8,7 @@ export const NATIONAL_SOURCES = {
   // Monthly NASS report; the file name changes each release, so it's found from the listing page.
   barley: { url: "https://esmis.nal.usda.gov/publication/agricultural-prices", kind: "nass", label: "USDA NASS Agricultural Prices (monthly), barley tables" },
   canada: { url: "https://mygrainexchange.com/en/prices", kind: "html", label: "My Grain Exchange Western Canada delivered prices (CAD)" },
+  iowaFert: { url: "https://www.ams.usda.gov/mnreports/ams_2863.pdf", alt: ["https://ams-prod.azureedge.us/mnreports/ams_2863.pdf", "https://ams.prod.usda.gov/mnreports/ams_2863.pdf"], kind: "pdf", label: "USDA AMS Iowa Production Cost Report (bi-weekly), fertilizer prices" },
 };
 
 export const CHESTER_SOURCES = {
